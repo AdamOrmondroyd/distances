@@ -15,11 +15,12 @@ gaussian = multivariate_normal(mean, cov)
 
 
 def likelihood(theta):
-    omegam = theta[0]
-    omegar = theta[1]
-    theta = theta[2:]
+    h0rd = theta[0]
+    omegam = theta[1]
+    omegar = theta[2]
+    theta = theta[3:]
     x = np.array([
-        di_over_rs(z, omegam, omegar, theta)
+        di_over_rs(z, h0rd, omegam, omegar, theta)
         for z, di_over_rs in zip(zs, di_over_rss)
     ])
     print(f'{x=}')

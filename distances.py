@@ -4,6 +4,8 @@ import flexknot
 
 w = flexknot.FlexKnot(0, 1)
 
+c = 3e8
+
 
 def integrand(z, theta):
     return (1 + w(1/(1+z), theta)) / (1 + z)
@@ -25,26 +27,16 @@ def h(z, omegam, omegar, theta):
     )
 
 
-def dm(omegam, omegar, theta):
-    pass
+# TODO: check units of everything
+
+def dh_over_rs(z, h0rd, omegam, omegar, theta):
+    return c / h0rd / h(z, omegam, omegar, theta)
 
 
-def dh(omegam, omegar, theta):
-    pass
+def dm_over_rs(z, h0rd, omegam, omegar, theta):
+    return c / h0rd * quad(lambda z: 1/h(z, omegam, omegar, theta), 0, z)
 
 
-def dv(z, omegam, omegar, theta):
-    return (z * dm(z, omegam, omegar, theta) ** 2
-            * dh(z, omegam, omegar, theta)) ** (1/3)
-
-
-def dv_over_rs(z, omegam, omegar, theta):
-    return 0
-
-
-def dm_over_rs(z, omegam, omegar, theta):
-    return 0
-
-
-def dh_over_rs(z, omegam, omegar, theta):
-    return 0
+def dv_over_rs(z, h0rd, omegam, omegar, theta):
+    return (z * dm_over_rs(z, h0rd, omegam, omegar, theta) ** 2
+            * dh_over_rs(z, h0rd, omegam, omegar, theta)) ** (1/3)
