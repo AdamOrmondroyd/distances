@@ -25,6 +25,19 @@ def h(z, omegam, omegar, theta):
     )
 
 
+def dm(omegam, omegar, theta):
+    pass
+
+
+def dh(omegam, omegar, theta):
+    pass
+
+
+def dv(z, omegam, omegar, theta):
+    return (z * dm(z, omegam, omegar, theta) ** 2
+            * dh(z, omegam, omegar, theta)) ** (1/3)
+
+
 def dv_over_rs(z, omegem, omegar, theta):
     return 0
 
