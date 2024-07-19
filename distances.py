@@ -23,3 +23,14 @@ def h(z, omegam, omegar, theta):
         + omegar / (1 + z)**4
         + (1 - omegam - omegar) * f_de(z, theta)
     )
+
+def dv_over_rs(z, theta):
+    return 0
+
+
+def dm_over_rs(z, theta):
+    return 0
+
+
+def dh_over_rs(z, theta):
+    return 0
