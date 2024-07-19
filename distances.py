@@ -38,13 +38,13 @@ def dv(z, omegam, omegar, theta):
             * dh(z, omegam, omegar, theta)) ** (1/3)
 
 
-def dv_over_rs(z, omegem, omegar, theta):
+def dv_over_rs(z, omegam, omegar, theta):
     return 0
 
 
-def dm_over_rs(z, omegem, omegar, theta):
+def dm_over_rs(z, omegam, omegar, theta):
     return 0
 
 
-def dh_over_rs(z, omegem, omegar, theta):
+def dh_over_rs(z, omegam, omegar, theta):
     return 0
