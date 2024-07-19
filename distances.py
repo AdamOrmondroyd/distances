@@ -10,10 +10,6 @@ c = c/1000
 w = FlexKnot(0, 1)
 
 
-def integrand(z, theta):
-    return (1 + w(1/(1+z), theta)) / (1 + z)
-
-
 def f_de(z, theta):
     integral = quad(lambda z: (1 + w(1/(1+z), theta)) / (1 + z), 0, z)[0]
     return e**(3*integral)
