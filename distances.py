@@ -25,13 +25,13 @@ def h(z, omegam, omegar, theta):
     )
 
 
-def dv_over_rs(z, theta):
+def dv_over_rs(z, omegem, omegar, theta):
     return 0
 
 
-def dm_over_rs(z, theta):
+def dm_over_rs(z, omegem, omegar, theta):
     return 0
 
 
-def dh_over_rs(z, theta):
+def dh_over_rs(z, omegem, omegar, theta):
     return 0
