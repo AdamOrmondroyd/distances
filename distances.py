@@ -20,8 +20,8 @@ def h(z, omegam, omegar, theta):
     H(z) / H0
     """
     return sqrt(
-        omegam / (1 + z)**3
-        + omegar / (1 + z)**4
+        omegam * (1 + z)**3
+        + omegar * (1 + z)**4
         + (1 - omegam - omegar) * f_de(z, theta)
     )
 
