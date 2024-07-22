@@ -16,7 +16,7 @@ paramnames = [
     (r"H0rd", r"H_0r_d"),
     (r"Omegam", r"\Omega_\mathrm{m}"),
 ]
-if n > 0:
+if n >= 2:
     paramnames += ("wn", "w_n")
 
 for i in range(0, n-2, -1):
@@ -24,7 +24,8 @@ for i in range(0, n-2, -1):
         (f"a{i}", f"a_{i}"),
         (f"w{i}", f"w_{i}"),
     ]
-paramnames += [("w0", "w_0")]
+if n >= 1:
+    paramnames += [("w0", "w_0")]
 
 ndims = len(paramnames)
 params = [paramname[0] for paramname in paramnames]
