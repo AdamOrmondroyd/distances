@@ -9,7 +9,7 @@ cov = loadtxt("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
 
 zs = data.iloc[:, 0].to_numpy()
 mean = data.iloc[:, 1].to_numpy()
-di_over_rss = [globals()[i.lower()] for i in data.iloc[:, 2]]
+di_over_rss = [getattr(distances, i.lower()) for i in data.iloc[:, 2]]
 
 gaussian = multivariate_normal(mean, cov)
 
