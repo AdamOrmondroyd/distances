@@ -15,15 +15,16 @@ n = int(sys.argv[1])
 paramnames = [
     (r"H0rd", r"H_0r_d"),
     (r"Omegam", r"\Omega_\mathrm{m}"),
-    ("wn", "w_n")
 ]
+if n > 0:
+    paramnames += ("wn", "w_n")
 
 for i in range(0, n-2, -1):
     paramnames += [
         (f"a{i}", f"a_{i}"),
         (f"w{i}", f"w_{i}"),
     ]
-paramnames += [("wn", "w_n")]
+paramnames += [("w0", "w_0")]
 
 ndims = len(paramnames)
 params = [paramname[0] for paramname in paramnames]
