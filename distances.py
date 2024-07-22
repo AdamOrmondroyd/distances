@@ -17,7 +17,7 @@ def f_de(z, theta):
     x_nodes = x_nodes[x_nodes > 1 / (1+z)]
     limits = concatenate([
         [0],
-        1 / x_nodes - 1,
+        (1 / x_nodes - 1)[::-1],
         [z],
     ])
     integral = sum([
