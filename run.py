@@ -17,7 +17,7 @@ paramnames = [
     (r"Omegam", r"\Omega_\mathrm{m}"),
 ]
 if n >= 2:
-    paramnames += ("wn", "w_n")
+    paramnames += [("wn", "w_n")]
 
 for i in range(0, n-2, -1):
     paramnames += [
