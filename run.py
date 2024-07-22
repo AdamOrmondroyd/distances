@@ -59,6 +59,6 @@ ns = pypolychord.run(likelihood, ndims, prior=prior,
                      read_resume=False)
 
 if comm.rank == 0:
-    fig, axes = make_2d_axes(params)
+    fig, axes = make_2d_axes(params[:2])
     ns.plot_2d(axes)
-    fig.save(f"plots/{file_root}.pdf", bbox_inches='tight')
+    fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
