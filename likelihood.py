@@ -1,7 +1,7 @@
 from numpy import loadtxt, log
 from pandas import read_csv
 from scipy.stats import multivariate_normal
-from distances import dv_over_rs, dm_over_rs, dh_over_rs
+import distances
 
 data = read_csv("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
                 header=None, index_col=None, sep=r"\s+", comment="#")

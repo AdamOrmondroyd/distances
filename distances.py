@@ -51,3 +51,7 @@ def dm_over_rs(z, h0rd, omegam, omegar, theta):
 def dv_over_rs(z, h0rd, omegam, omegar, theta):
     return (z * dm_over_rs(z, h0rd, omegam, omegar, theta) ** 2
             * dh_over_rs(z, h0rd, omegam, omegar, theta)) ** (1/3)
+
+
+def dl_over_rs(z, h0rd, omegam, omegar, theta):
+    return (1+z) * dm_over_rs(z, h0rd, omegam, omegar, theta)

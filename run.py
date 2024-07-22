@@ -16,6 +16,7 @@ paramnames = [
     (r"H0rd", r"H_0r_d"),
     (r"Omegam", r"\Omega_\mathrm{m}"),
 ]
+
 if n >= 2:
     paramnames += [("wn", "w_n")]
 
@@ -30,6 +31,7 @@ if n >= 1:
 ndims = len(paramnames)
 params = [paramname[0] for paramname in paramnames]
 
+
 h0rd_prior = UniformPrior(3650, 18250)
 omegam_prior = UniformPrior(0.01, 0.99)
 
@@ -43,17 +45,19 @@ def prior(x):
     ])
 
 
-x = np.random.rand(ndims)
+for i in range(10):
+    x = np.random.rand(ndims)
+    print(f"{likelihood(prior(x))=}")
 
-likelihood(prior(x))
 
-file_root = f"test{n}"
+file_root = f"test_{n}"
 
 ns = pypolychord.run(likelihood, ndims, prior=prior,
                      nlive=500,
                      paramnames=paramnames,
                      file_root=file_root,
                      read_resume=False)
+
 if comm.rank == 0:
     fig, axes = make_2d_axes(params)
     ns.plot_2d(axes)
