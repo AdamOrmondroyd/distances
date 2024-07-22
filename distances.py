@@ -1,7 +1,8 @@
-from numpy import e, sqrt
+from numpy import concatenate, e, sqrt
 from scipy.integrate import quad
 from scipy.constants import c
 from flexknot import FlexKnot
+from flexknot.utils import get_x_nodes_from_theta
 
 
 # c in units of km/s
@@ -11,7 +12,18 @@ w = FlexKnot(0, 1)
 
 
 def f_de(z, theta):
-    integral = quad(lambda z: (1 + w(1/(1+z), theta)) / (1 + z), 0, z)[0]
+    # split integral by flexknot nodes
+    x_nodes = get_x_nodes_from_theta(theta, False)
+    x_nodes = x_nodes[x_nodes > 1 / (1+z)]
+    limits = concatenate([
+        [0],
+        1 / x_nodes - 1,
+        [z],
+    ])
+    integral = sum([
+        quad(lambda z: (1 + w(1/(1+z), theta)) / (1 + z), lower, upper)[0]
+        for lower, upper in zip(limits[:-1], limits[1:])
+    ])
     return e**(3*integral)
 
 
