@@ -20,7 +20,7 @@ paramnames = [
 if n >= 2:
     paramnames += [("wn", "w_n")]
 
-for i in range(0, n-2, -1):
+for i in range(n-2, 0, -1):
     paramnames += [
         (f"a{i}", f"a_{i}"),
         (f"w{i}", f"w_{i}"),
