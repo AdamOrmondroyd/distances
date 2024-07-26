@@ -22,7 +22,4 @@ def likelihood(theta, omegar=8.24e-5):
         di_over_rs(z, h0rd, omegam, omegar, theta)
         for z, di_over_rs in zip(zs, di_over_rss)
     ]
-    likelihood = gaussian.pdf(x)
-    if likelihood == 0:
-        return -1e30
-    return log(likelihood)
+    return gaussian.logpdf(x)
