@@ -79,4 +79,6 @@ paramnames = [
 
 pypolychord.run(likelihood, ndims, prior=prior,
                 read_resume=False,
-                paramnames=paramnames)
+                paramnames=paramnames,
+                file_root="ia",
+                )
