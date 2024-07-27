@@ -5,6 +5,11 @@ from scipy.integrate import quad, cumulative_trapezoid
 from scipy.stats import multivariate_normal
 import pypolychord
 from distances import c, h
+from matplotlib import pyplot as plt
+from anesthetic import make_2d_axes
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD
 
 
 # data loading stolen from Toby
@@ -77,8 +82,14 @@ paramnames = [
     ("Omegam", r"\Omega_\mathrm{m}"),
 ]
 
-pypolychord.run(likelihood, ndims, prior=prior,
-                read_resume=False,
-                paramnames=paramnames,
-                file_root="ia",
-                )
+ns = pypolychord.run(likelihood, ndims, prior=prior,
+                     read_resume=False,
+                     paramnames=paramnames,
+                     file_root="ia",
+                     )
+
+params = [p[0] for p in paramnames]
+if comm.rank == 0:
+    fig, ax = make_2d_axes(params)
+    ns.plot_2d(ax)
+    fig.savefig("plots/ia.pdf", bbox_inches='tight')
