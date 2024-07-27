@@ -75,9 +75,8 @@ paramnames = [
     ("Mb", r"M_\mathrm{b}"),
     ("H0", r"H_0"),
     ("Omegam", r"\Omega_\mathrm{m}"),
-    ("Omegar", r"\Omega_\mathrm{r}"),
-    ("w", "w"),
 ]
 
 pypolychord.run(likelihood, ndims, prior=prior,
-                read_resume=False)
+                read_resume=False,
+                paramnames=paramnames)
