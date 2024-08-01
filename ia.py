@@ -45,7 +45,7 @@ def dl(z, h0, omegam, omegar, theta):
 
 def ia_likelihood(Mb, h0, omegam, omegar, theta):
 
-    mu = 5 * log10(dl(z, h0, omegam, omegar, np.array([theta]))) + 25
+    mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
 
     mu = (mu1 * cephmask + mu2masked)
