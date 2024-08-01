@@ -45,6 +45,7 @@ def dl(z, h0, omegam, omegar, theta):
 
 
 def ia_likelihood(Mb, h0, omegam, omegar, theta):
+    theta = array(theta)
 
     mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
@@ -68,11 +69,8 @@ def prior(x):
 
 
 def likelihood(theta):
-    Mb = theta[0]
-    h0 = theta[1]
-    omegam = theta[2]
+    Mb, h0, omegam, *theta = theta
     omegar = 8.24e-5
-    theta = theta[3:]
     return ia_likelihood(Mb, h0, omegam, omegar, theta)
 
 

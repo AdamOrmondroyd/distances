@@ -1,4 +1,4 @@
-from numpy import loadtxt, log
+from numpy import array, loadtxt, log
 from pandas import read_csv
 from scipy.stats import multivariate_normal
 import distances
@@ -15,6 +15,7 @@ gaussian = multivariate_normal(mean, cov)
 
 
 def desi_likelihood(h0rd, omegam, omegar, theta):
+    theta = array(theta)
     x = [
         di_over_rs(z, h0rd, omegam, omegar, theta)
         for z, di_over_rs in zip(zs, di_over_rss)
