@@ -6,9 +6,9 @@ from scipy.integrate import quad, cumulative_trapezoid
 from scipy.stats import multivariate_normal
 import pypolychord
 from distances import c, h
-from matplotlib import pyplot as plt
 from anesthetic import make_2d_axes
 from mpi4py import MPI
+from flexknot import Prior
 
 comm = MPI.COMM_WORLD
 
