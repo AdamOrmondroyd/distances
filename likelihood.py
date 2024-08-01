@@ -1,4 +1,4 @@
-from numpy import array, loadtxt, log
+from numpy import array, loadtxt
 from pandas import read_csv
 from scipy.stats import multivariate_normal
 import distances
