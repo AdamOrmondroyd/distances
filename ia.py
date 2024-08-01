@@ -56,12 +56,15 @@ lower = array([-20, 50, 0.01])
 upper = array([-18, 100, 0.99])
 prior_range = upper - lower
 
+flexknotprior = Prior(0, 1, -3, -0.01)
+
 
 def prior(x):
-    return lower + x * prior_range
+    return np.concatenate([
+        lower + x[:3] * prior_range,
+        flexknotprior(x[3:])
+    ])
 
-
-ndims = len(lower)
 
 def likelihood(theta):
     Mb = theta[0]
