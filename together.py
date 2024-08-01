@@ -55,11 +55,6 @@ def likelihood(theta):
     return desi_likelihood(h0rd, omegam, omegar, theta) + ia_likelihood(Mb, h0, omegam, omegar, theta)
 
 
-
-# for i in range(100):
-#     print(i)
-#     likelihood(prior(np.random.rand(ndims)))
-
 file_root = f"together_{n}"
 if __name__ == "__main__":
     ns = pypolychord.run(likelihood, ndims, prior=prior,
