@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from numpy import array, log10
 import pandas as pd
@@ -71,13 +72,11 @@ def likelihood(theta):
     h0 = theta[1]
     omegam = theta[2]
     omegar = 8.24e-5
-    theta = np.array([-1])
+    theta = theta[3:]
     return ia_likelihood(Mb, h0, omegam, omegar, theta)
 
-for i in range(1000):
-    print(i)
-    likelihood(prior(np.random.rand()))
 
+n = int(sys.argv[1])
 
 paramnames = [
     ("Mb", r"M_\mathrm{b}"),
@@ -85,14 +84,36 @@ paramnames = [
     ("Omegam", r"\Omega_\mathrm{m}"),
 ]
 
-ns = pypolychord.run(likelihood, ndims, prior=prior,
-                     read_resume=False,
-                     paramnames=paramnames,
-                     file_root="ia",
-                     )
+if n >= 2:
+    paramnames += [("wn", "w_n")]
 
-params = [p[0] for p in paramnames]
-if comm.rank == 0:
-    fig, ax = make_2d_axes(params)
-    ns.plot_2d(ax)
-    fig.savefig("plots/ia.pdf", bbox_inches='tight')
+for i in range(n-2, 0, -1):
+    paramnames += [
+        (f"a{i}", f"a_{i}"),
+        (f"w{i}", f"w_{i}"),
+    ]
+if n >= 1:
+    paramnames += [("w0", "w_0")]
+
+ndims = len(paramnames)
+file_root = f"ia_{n}"
+
+for i in range(1):
+    print(i)
+    print(prior(np.random.rand(ndims)))
+    print(likelihood(prior(np.random.rand(ndims))))
+
+
+if __name__ == "__main__":
+    ns = pypolychord.run(likelihood, ndims, prior=prior,
+                         read_resume=False,
+                         paramnames=paramnames,
+                         file_root=file_root,
+                         nlive=1000,
+                         )
+
+    params = [p[0] for p in paramnames]
+    if comm.rank == 0:
+        fig, ax = make_2d_axes(params)
+        ns.plot_2d(ax)
+        fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
