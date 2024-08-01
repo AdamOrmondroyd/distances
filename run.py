@@ -46,10 +46,9 @@ def prior(x):
 
 
 def likelihood(theta):
-    h0rd = theta[0]
-    omegam = theta[1]
+    h0rd, omegam, *theta = theta
+    theta = np.array(theta)
     omegar = 8.24e-5
-    theta = theta[2:]
     return desi_likelihood(h0rd, omegam, omegar, theta)
 
 
