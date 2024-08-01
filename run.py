@@ -45,6 +45,14 @@ def prior(x):
     ])
 
 
+def likelihood(theta):
+    h0rd = theta[0]
+    omegam = theta[1]
+    omegar = 8.24e-5
+    theta = theta[2:]
+    return desi_likelihood(h0rd, omegam, omegar, theta)
+
+
 for i in range(10):
     x = np.random.rand(ndims)
     print(f"{likelihood(prior(x))=}")
@@ -52,13 +60,19 @@ for i in range(10):
 
 file_root = f"test_{n}"
 
-ns = pypolychord.run(likelihood, ndims, prior=prior,
-                     nlive=500,
-                     paramnames=paramnames,
-                     file_root=file_root,
-                     read_resume=False)
+nlive = 25 * ndims
+if nlive < 500:
+    nlive = 500
 
-if comm.rank == 0:
-    fig, axes = make_2d_axes(params[:2])
-    ns.plot_2d(axes)
-    fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
+if __name__ == "__main__":
+    ns = pypolychord.run(likelihood, ndims, prior=prior,
+                         nlive=nlive,
+                         paramnames=paramnames,
+                         file_root=file_root,
+                         # cluster=xmeans,
+                         read_resume=True)
+
+    if comm.rank == 0:
+        fig, axes = make_2d_axes(params[:2])
+        ns.plot_2d(axes)
+        fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')

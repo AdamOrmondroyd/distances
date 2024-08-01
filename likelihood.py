@@ -14,10 +14,7 @@ di_over_rss = [getattr(distances, i.lower()) for i in data.iloc[:, 2]]
 gaussian = multivariate_normal(mean, cov)
 
 
-def likelihood(theta, omegar=8.24e-5):
-    h0rd = theta[0]
-    omegam = theta[1]
-    theta = theta[2:]
+def desi_likelihood(h0rd, omegam, omegar, theta):
     x = [
         di_over_rs(z, h0rd, omegam, omegar, theta)
         for z, di_over_rs in zip(zs, di_over_rss)
