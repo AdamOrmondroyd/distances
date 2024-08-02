@@ -4,7 +4,7 @@ import pypolychord
 from pypolychord.priors import UniformPrior
 from flexknot import Prior
 from anesthetic import make_2d_axes
-from likelihood import likelihood
+from likelihood import desi_likelihood
 from mpi4py import MPI
 
 comm = MPI.COMM_WORLD
