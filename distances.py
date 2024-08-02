@@ -40,6 +40,14 @@ def h(z, omegam, omegar, theta):
 
 # TODO: check units of everything - c is km/s!
 
+def h0dh(z, omegam, omegar, theta):
+    return c / h(z, omegam, omegar, theta)
+
+
+def h0dm(z, omegam, omegar, theta):
+    return c * quad(lambda z: 1/h(z, omegam, omegar, theta), 0, z)[0]
+
+
 def dh_over_rs(z, h0rd, omegam, omegar, theta):
     return c / h0rd / h(z, omegam, omegar, theta)
 
