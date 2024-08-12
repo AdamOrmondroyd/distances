@@ -4,6 +4,7 @@ import pypolychord
 from pypolychord.priors import UniformPrior
 from flexknot import Prior
 from anesthetic import make_2d_axes
+from clustering import xmeans
 from likelihood import desi_likelihood
 from mpi4py import MPI
 
