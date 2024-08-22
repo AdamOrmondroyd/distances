@@ -104,6 +104,6 @@ if __name__ == "__main__":
 
     params = [p[0] for p in paramnames]
     if comm.rank == 0:
-        fig, ax = make_2d_axes(params)
+        fig, ax = make_2d_axes(params[:3])
         ns.plot_2d(ax)
         fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
