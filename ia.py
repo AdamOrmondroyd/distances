@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from numpy import array, log10
 import pandas as pd
-from scipy.integrate import quad, cumulative_trapezoid
+from scipy.integrate import quad
 from scipy.stats import multivariate_normal
 import pypolychord
 from distances import dl
