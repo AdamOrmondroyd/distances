@@ -65,7 +65,7 @@ if __name__ == "__main__":
                          nprior=10_000,
                          paramnames=paramnames,
                          file_root=file_root,
-                         # cluster=xmeans,
+                         cluster=xmeans,
                          read_resume=True)
 
     if comm.rank == 0:
