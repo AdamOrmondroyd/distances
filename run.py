@@ -57,11 +57,7 @@ for i in range(10):
     print(f"{likelihood(prior(x))=}")
 
 
-file_root = f"test_{n}"
-
-nlive = 25 * ndims
-if nlive < 500:
-    nlive = 500
+file_root = f"distances_{n}"
 
 if __name__ == "__main__":
     ns = pypolychord.run(likelihood, ndims, prior=prior,
