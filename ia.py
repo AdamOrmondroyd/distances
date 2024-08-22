@@ -8,6 +8,7 @@ import pypolychord
 from distances import dl
 from anesthetic import make_2d_axes
 from mpi4py import MPI
+from clustering import xmeans
 from flexknot import Prior
 
 comm = MPI.COMM_WORLD
@@ -88,7 +89,7 @@ if __name__ == "__main__":
         paramnames += [("w0", "w_0")]
 
     ndims = len(paramnames)
-    file_root = f"ianprior_{n}"
+    file_root = f"iaxmeans_{n}"
 
     for i in range(1):
         print(i)
@@ -101,6 +102,7 @@ if __name__ == "__main__":
                          file_root=file_root,
                          nlive=1000,
                          nprior=10_000,
+                         cluster=xmeans,
                          )
 
     params = [p[0] for p in paramnames]
