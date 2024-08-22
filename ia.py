@@ -100,6 +100,7 @@ if __name__ == "__main__":
                          paramnames=paramnames,
                          file_root=file_root,
                          nlive=1000,
+                         nprior=10_000,
                          )
 
     params = [p[0] for p in paramnames]
