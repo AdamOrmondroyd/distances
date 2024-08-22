@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.integrate import quad, cumulative_trapezoid
 from scipy.stats import multivariate_normal
 import pypolychord
-from distances import c, h
+from distances import dl
 from anesthetic import make_2d_axes
 from mpi4py import MPI
 from flexknot import Prior
@@ -35,13 +35,6 @@ gaussian = multivariate_normal(np.zeros(len(mcov)), mcov)
 mu2 = mbcorr - cephdist
 notcephmask = 1 - cephmask
 mu2masked = mu2 * notcephmask
-
-
-def dl(z, h0, omegam, omegar, theta):
-    q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, z[0])[0]
-    h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in z]
-    q = cumulative_trapezoid(h_inverse, z, initial=0) + q0
-    return (1+z) * c / h0 * q
 
 
 def ia_likelihood(Mb, h0, omegam, omegar, theta):
