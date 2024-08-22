@@ -61,7 +61,8 @@ file_root = f"distances_{n}"
 
 if __name__ == "__main__":
     ns = pypolychord.run(likelihood, ndims, prior=prior,
-                         nlive=nlive,
+                         nlive=1000,
+                         nprior=10_000,
                          paramnames=paramnames,
                          file_root=file_root,
                          # cluster=xmeans,
