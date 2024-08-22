@@ -67,35 +67,34 @@ def likelihood(theta):
     return ia_likelihood(Mb, h0, omegam, omegar, theta)
 
 
-n = int(sys.argv[1])
-
-paramnames = [
-    ("Mb", r"M_\mathrm{b}"),
-    ("H0", r"H_0"),
-    ("Omegam", r"\Omega_\mathrm{m}"),
-]
-
-if n >= 2:
-    paramnames += [("wn", "w_n")]
-
-for i in range(n-2, 0, -1):
-    paramnames += [
-        (f"a{i}", f"a_{i}"),
-        (f"w{i}", f"w_{i}"),
-    ]
-if n >= 1:
-    paramnames += [("w0", "w_0")]
-
-ndims = len(paramnames)
-file_root = f"ia_{n}"
-
-for i in range(1):
-    print(i)
-    print(prior(np.random.rand(ndims)))
-    print(likelihood(prior(np.random.rand(ndims))))
-
-
 if __name__ == "__main__":
+    n = int(sys.argv[1])
+
+    paramnames = [
+        ("Mb", r"M_\mathrm{b}"),
+        ("H0", r"H_0"),
+        ("Omegam", r"\Omega_\mathrm{m}"),
+    ]
+
+    if n >= 2:
+        paramnames += [("wn", "w_n")]
+
+    for i in range(n-2, 0, -1):
+        paramnames += [
+            (f"a{i}", f"a_{i}"),
+            (f"w{i}", f"w_{i}"),
+        ]
+    if n >= 1:
+        paramnames += [("w0", "w_0")]
+
+    ndims = len(paramnames)
+    file_root = f"ianprior_{n}"
+
+    for i in range(1):
+        print(i)
+        print(prior(np.random.rand(ndims)))
+        print(likelihood(prior(np.random.rand(ndims))))
+
     ns = pypolychord.run(likelihood, ndims, prior=prior,
                          read_resume=False,
                          paramnames=paramnames,
