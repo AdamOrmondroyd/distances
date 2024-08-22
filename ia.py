@@ -54,7 +54,7 @@ def ia_likelihood(Mb, h0, omegam, omegar, theta):
     return gaussian.logpdf(Mb - mu)
 
 
-lower = array([-20, 50, 0.01])
+lower = array([-20, 20, 0.01])
 upper = array([-18, 100, 0.99])
 prior_range = upper - lower
 
