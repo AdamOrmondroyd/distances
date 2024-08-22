@@ -1,5 +1,5 @@
 from numpy import concatenate, e, sqrt
-from scipy.integrate import quad
+from scipy.integrate import quad, cumulative_trapezoid
 from scipy.constants import c
 from flexknot import FlexKnot
 from flexknot.utils import get_x_nodes_from_theta
@@ -63,3 +63,10 @@ def dv_over_rs(z, h0rd, omegam, omegar, theta):
 
 def dl_over_rs(z, h0rd, omegam, omegar, theta):
     return (1+z) * dm_over_rs(z, h0rd, omegam, omegar, theta)
+
+
+def dl(z, h0, omegam, omegar, theta):
+    q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, z[0])[0]
+    h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in z]
+    q = cumulative_trapezoid(h_inverse, z, initial=0) + q0
+    return (1+z) * c / h0 * q
