@@ -66,7 +66,7 @@ if __name__ == "__main__":
             logZerrs.append(logZi.std())
         ax[2].errorbar(idx, logZs, yerr=logZerrs,
                        marker="+", linestyle="None")
-        ax[2].set(xlabel="$N$", ylabel=r"$\log{Z_i}$")
+        ax[2].set(xlabel="$N$", ylabel=r"$\log{Z_N}$")
 
         def fz(z, theta):
             theta = theta[~np.isnan(theta)]
