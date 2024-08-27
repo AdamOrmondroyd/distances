@@ -7,6 +7,7 @@ import pypolychord
 from flexknot import Prior
 from mpi4py import MPI
 from anesthetic import make_2d_axes
+from clustering import xmeans
 
 
 comm = MPI.COMM_WORLD
@@ -62,6 +63,7 @@ if __name__ == "__main__":
                          paramnames=paramnames,
                          file_root=file_root,
                          nlive=1000,
+                         cluster=xmeans,
                          )
 
     params = [p[0] for p in paramnames]
