@@ -29,8 +29,6 @@ cephdist = df['CEPH_DIST'].to_numpy()[mask]
 
 mcov = cov[mask, :][:, mask]
 
-N = len(z)
-
 gaussian = multivariate_normal(np.zeros(len(mcov)), mcov)
 
 mu2 = mbcorr - cephdist
