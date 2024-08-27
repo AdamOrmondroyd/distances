@@ -15,11 +15,11 @@ comm = MPI.COMM_WORLD
 
 
 # data loading stolen from Toby
-df = pd.read_table('pantheon1.txt', sep=' ', engine='python')
-cov = np.reshape(np.loadtxt('Pantheon+SH0ES_STAT+SYS.cov.txt'), [1701, 1701])
+df = pd.read_table('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES.dat', sep=' ', engine='python')
+cov = np.reshape(np.loadtxt('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES_STAT+SYS.cov', skiprows=1), [1701, 1701])
 
 mask = (df['zHD'] > 0.023) | (df['IS_CALIBRATOR'] == 1)
-cephmask = (df['IS_CALIBRATOR'] == 0)[mask]
+iamask = (df['IS_CALIBRATOR'] == 0)[mask]
 
 mbcorr = df['m_b_corr'].to_numpy()[mask]
 
@@ -32,8 +32,8 @@ mcov = cov[mask, :][:, mask]
 gaussian = multivariate_normal(np.zeros(len(mcov)), mcov)
 
 mu2 = mbcorr - cephdist
-notcephmask = 1 - cephmask
-mu2masked = mu2 * notcephmask
+cephmask = 1 - iamask
+mu2masked = mu2 * cephmask
 
 
 def ia_likelihood(Mb, h0, omegam, omegar, theta):
@@ -42,7 +42,7 @@ def ia_likelihood(Mb, h0, omegam, omegar, theta):
     mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
 
-    mu = (mu1 * cephmask + mu2masked)
+    mu = (mu1 * iamask + mu2masked)
     return gaussian.logpdf(Mb - mu)
 
 
