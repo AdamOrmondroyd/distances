@@ -35,7 +35,7 @@ ndims = len(paramnames)
 params = [paramname[0] for paramname in paramnames]
 
 
-lower = array([3650, -20, 50, 0.01])
+lower = array([3650, -20, 20, 0.01])
 upper = array([18250, -18, 100, 0.99])
 prior_range = upper - lower
 
