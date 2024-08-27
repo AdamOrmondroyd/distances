@@ -40,6 +40,7 @@ upper = array([18250, -18, 100, 0.99])
 prior_range = upper - lower
 
 flexknotprior = Prior(0, 1, -3, -0.01)
+omegar = 8.24e-5
 
 
 def prior(x):
@@ -51,7 +52,6 @@ def prior(x):
 
 def likelihood(theta):
     h0rd, Mb, h0, omegam, *theta = theta
-    omegar = 8.24e-5
     return desi_likelihood(h0rd, omegam, omegar, theta) + ia_likelihood(Mb, h0, omegam, omegar, theta)
 
 
