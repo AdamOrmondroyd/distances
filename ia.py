@@ -39,6 +39,8 @@ mu2masked = mu2 * cephmask
 def ia_likelihood(Mb, h0, omegam, omegar, theta):
     theta = array(theta)
 
+    # dl is calculated in Mpc = [c/H0]
+    # mu = 5 log(dl/10pc), so 25 comes from converting from Mpc to pc
     mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
 
