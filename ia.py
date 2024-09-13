@@ -48,8 +48,27 @@ def ia_likelihood(Mb, h0, omegam, omegar, theta):
     return gaussian.logpdf(Mb - mu)
 
 
-lower = array([-20, 20, 0.01])
-upper = array([-18, 100, 0.99])
+one = np.ones(len(mcov))[:, None]
+invcov = np.linalg.inv(mcov)
+invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
+lognormalisation = 0.5 * (np.log(2*np.pi)
+                          - np.linalg.slogdet(2 * np.pi * mcov)[1]
+                          - float(np.log(one.T @ invcov @ one)))
+
+
+def marginalised(h0, omegam, omegar, theta):
+    theta = np.array(theta)
+    mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
+    mu1 = mbcorr - mu
+
+    mu = (mu1 * iamask + mu2masked).to_numpy()[:, None]
+    return lognormalisation + float(-mu.T @ invcov_tilde @ mu / 2)
+
+
+# lower = array([-20, 20, 0.01])
+# upper = array([-18, 100, 0.99])
+lower = array([20, 0.01])
+upper = array([100, 0.99])
 prior_range = upper - lower
 
 flexknotprior = Prior(0, 1, -3, -0.01)
@@ -62,14 +81,27 @@ def prior(x):
     ])
 
 
+omegar = 8.24e-5
+
+
 def likelihood(theta):
-    Mb, h0, omegam, *theta = theta
-    omegar = 8.24e-5
-    return ia_likelihood(Mb, h0, omegam, omegar, theta)
+    h0, omegam, *theta = theta
+    # return ia_likelihood(Mb, h0, omegam, omegar, theta)
+    return marginalised(h0, omegam, omegar, theta)
 
 
 if __name__ == "__main__":
-    n = int(sys.argv[1])
+    try:
+        n = int(sys.argv[1])
+    except ValueError:
+        n = 'lcdm'
+
+        def prior(x):
+            return lower + x * prior_range
+
+        def likelihood(theta):
+            Mb, h0, omegam = theta
+            return ia_likelihood(Mb, h0, omegam, omegar, np.array([-1]))
 
     paramnames = [
         ("Mb", r"M_\mathrm{b}"),
@@ -77,16 +109,17 @@ if __name__ == "__main__":
         ("Omegam", r"\Omega_\mathrm{m}"),
     ]
 
-    if n >= 2:
-        paramnames += [("wn", "w_n")]
+    if n != "lcdm":
+        if n >= 2:
+            paramnames += [("wn", "w_n")]
 
-    for i in range(n-2, 0, -1):
-        paramnames += [
-            (f"a{i}", f"a_{i}"),
-            (f"w{i}", f"w_{i}"),
-        ]
-    if n >= 1:
-        paramnames += [("w0", "w_0")]
+        for i in range(n-2, 0, -1):
+            paramnames += [
+                (f"a{i}", f"a_{i}"),
+                (f"w{i}", f"w_{i}"),
+            ]
+        if n >= 1:
+            paramnames += [("w0", "w_0")]
 
     ndims = len(paramnames)
     file_root = f"iaxmeans_{n}"
