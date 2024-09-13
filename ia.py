@@ -57,8 +57,8 @@ flexknotprior = Prior(0, 1, -3, -0.01)
 
 def prior(x):
     return np.concatenate([
-        lower + x[:3] * prior_range,
-        flexknotprior(x[3:])
+        lower + x[:len(lower)] * prior_range,
+        flexknotprior(x[len(lower):])
     ])
 
 
