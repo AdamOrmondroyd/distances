@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from scipy.stats import multivariate_normal
+import pandas as pd
 from common import run
 import distances
 
