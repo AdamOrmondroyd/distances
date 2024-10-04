@@ -40,6 +40,8 @@ def logl_ia(h0, omegam, omegar, theta=np.array([-1])):
     return lognormalisation + float(-x.T @ invcov_tilde @ x / 2)
 
 
+omegar = 8.24e-5
+
 if __name__ == "__main__":
     omegar = 8.24e-5
 
