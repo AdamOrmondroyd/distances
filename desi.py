@@ -41,26 +41,24 @@ flexknotprior = Prior(0, 1, -3, -0.01)
 
 def prior(x):
     return np.concatenate([
-        [h0rd_prior(x[0]), omegam_prior(x[1])],
+        [h0rd_prior(x[0]),
+         omegam_prior(x[1])],
         flexknotprior(x[2:])
     ])
 
 
-def likelihood(theta):
+omegar = 8.24e-5
+
+
+def logl_desi(theta):
     h0rd, omegam, *theta = theta
-    omegar = 8.24e-5
     return desi_likelihood(h0rd, omegam, omegar, theta)
 
 
-for i in range(10):
-    x = np.random.rand(ndims)
-    print(f"{likelihood(prior(x))=}")
-
-
-file_root = f"distances_{n}"
+file_root = f"desi_{n}"
 
 if __name__ == "__main__":
-    ns = pypolychord.run(likelihood, ndims, prior=prior,
+    ns = pypolychord.run(logl_desi, ndims, prior=prior,
                          nlive=1000,
                          nprior=10_000,
                          paramnames=paramnames,
