@@ -10,7 +10,7 @@ from distances import dl
 df = pd.read_table('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES.dat', sep=' ', engine='python')
 cov = np.reshape(np.loadtxt('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES_STAT+SYS.cov', skiprows=1), [1701, 1701])
 
-mask = (df['zHD'] > 0.023) | (df['IS_CALIBRATOR'] == 1)
+mask = df['zHD'] > 0.023
 
 mbcorr = df['m_b_corr'].to_numpy()[mask]
 
