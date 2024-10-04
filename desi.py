@@ -28,7 +28,6 @@ def logl_desi(h0rd, omegam, omegar, theta):
 omegar = 8.24e-5
 
 if __name__ == "__main__":
-    omegar = 8.24e-5
 
     def likelihood(theta):
         h0rd, omegam, *theta = theta

@@ -43,7 +43,6 @@ def logl_ia(h0, omegam, omegar, theta=np.array([-1])):
 omegar = 8.24e-5
 
 if __name__ == "__main__":
-    omegar = 8.24e-5
 
     def likelihood(theta):
         h0, omegam, *theta = theta
