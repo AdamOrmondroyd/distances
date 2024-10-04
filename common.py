@@ -66,4 +66,3 @@ def run(likelihood, n, prior_lower, prior_upper,
         fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
 
     return ns
-
