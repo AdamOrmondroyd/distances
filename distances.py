@@ -61,20 +61,12 @@ def dv_over_rs(z, h0rd, omegam, omegar, theta):
             * dh_over_rs(z, h0rd, omegam, omegar, theta)) ** (1/3)
 
 
-def dl_over_rs(z, h0rd, omegam, omegar, theta):
-    return (1+z) * dm_over_rs(z, h0rd, omegam, omegar, theta)
+def dl_over_rs(zhd, zhel, h0rd, omegam, omegar, theta):
+    return (1+zhel) * dm_over_rs(zhd, h0rd, omegam, omegar, theta)
 
 
-def dl(z, h0, omegam, omegar, theta):
-    q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, z[0])[0]
-    h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in z]
-    q = cumulative_trapezoid(h_inverse, z, initial=0) + q0
-    return (1+z) * c / h0 * q
-
-
-def corrected_dl(zhd, zhel, h0, omegam, omegar, theta):
+def dl(zhd, zhel, h0, omegam, omegar, theta):
     q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, zhd[0])[0]
     h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in zhd]
     q = cumulative_trapezoid(h_inverse, zhd, initial=0) + q0
     return (1+zhel) * c / h0 * q
-
