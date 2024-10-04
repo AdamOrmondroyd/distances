@@ -29,7 +29,7 @@ invcov = np.linalg.inv(mcov)
 invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
 lognormalisation = 0.5 * (np.log(2*np.pi)
                           - np.linalg.slogdet(2 * np.pi * mcov)[1]
-                          - float(np.log(one.T @ invcov @ one)))
+                          - np.log((one.T @ invcov @ one).squeeze()))
 
 
 def logl_ia(h0, omegam, omegar, theta=np.array([-1])):
