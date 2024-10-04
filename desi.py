@@ -1,72 +1,42 @@
 import sys
 import numpy as np
-import pypolychord
-from pypolychord.priors import UniformPrior
-from flexknot import Prior
-from anesthetic import make_2d_axes
-from clustering import xmeans
-from likelihood import desi_likelihood
-from mpi4py import MPI
+from scipy.stats import multivariate_normal
+from common import run
+import distances
 
-comm = MPI.COMM_WORLD
+data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
+                header=None, index_col=None, sep=r"\s+", comment="#")
+cov = loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
+
+zs = data.iloc[:, 0].to_numpy()
+mean = data.iloc[:, 1].to_numpy()
+di_over_rss = [getattr(distances, i.lower()) for i in data.iloc[:, 2]]
+
+gaussian = multivariate_normal(mean, cov)
 
 
-n = int(sys.argv[1])
-
-paramnames = [
-    (r"H0rd", r"H_0r_d"),
-    (r"Omegam", r"\Omega_\mathrm{m}"),
-]
-
-if n >= 2:
-    paramnames += [("wn", "w_n")]
-
-for i in range(n-2, 0, -1):
-    paramnames += [
-        (f"a{i}", f"a_{i}"),
-        (f"w{i}", f"w_{i}"),
+def logl_desi(h0rd, omegam, omegar, theta):
+    theta = np.array(theta)
+    x = [
+        di_over_rs(z, h0rd, omegam, omegar, theta)
+        for z, di_over_rs in zip(zs, di_over_rss)
     ]
-if n >= 1:
-    paramnames += [("w0", "w_0")]
+    return gaussian.logpdf(x)
 
-ndims = len(paramnames)
-params = [paramname[0] for paramname in paramnames]
-
-
-h0rd_prior = UniformPrior(3650, 18250)
-omegam_prior = UniformPrior(0.01, 0.99)
-
-flexknotprior = Prior(0, 1, -3, -0.01)
-
-
-def prior(x):
-    return np.concatenate([
-        [h0rd_prior(x[0]),
-         omegam_prior(x[1])],
-        flexknotprior(x[2:])
-    ])
-
-
-omegar = 8.24e-5
-
-
-def logl_desi(theta):
-    h0rd, omegam, *theta = theta
-    return desi_likelihood(h0rd, omegam, omegar, theta)
-
-
-file_root = f"desi_{n}"
 
 if __name__ == "__main__":
-    ns = pypolychord.run(logl_desi, ndims, prior=prior,
-                         nlive=1000,
-                         nprior=10_000,
-                         paramnames=paramnames,
-                         file_root=file_root,
-                         cluster=xmeans,
-                         read_resume=True)
+    omegar = 8.24e-5
 
-    if comm.rank == 0:
-        fig, axes = make_2d_axes(params[:2])
-        ns.plot_2d(axes)
-        fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
+    def likelihood(theta):
+        h0rd, omegam, *theta = theta
+        return logl_desi(h0rd, omegam, omegar, theta)
+
+    ns = run(
+        likelihood,
+        sys.argv[1],
+        [3650, 0.01],
+        [18250, 0.99],
+        "desi",
+        [(r"H0rd", r"H_0r_d"), (r"Omegam", r"\Omega_\mathrm{m}")],
+        True,
+    )
