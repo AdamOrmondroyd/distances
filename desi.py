@@ -5,9 +5,9 @@ import pandas as pd
 from common import run
 import distances
 
-data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
-                header=None, index_col=None, sep=r"\s+", comment="#")
-cov = loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
+data = pd.read_csv("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
+                   header=None, index_col=None, sep=r"\s+", comment="#")
+cov = np.loadtxt("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
 
 zs = data.iloc[:, 0].to_numpy()
 mean = data.iloc[:, 1].to_numpy()
