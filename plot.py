@@ -35,13 +35,14 @@ params = [p[0] for p in paramnames]
 
 if single:
     ns = read_chains(f"chains/{name}_{n}")
+    ns = ns.prior()
 else:
     idx = range(1, n+1)
     nss = [read_chains(f"chains/{name}_{i}") for i in idx]
     ns = merge_samples_weighted(nss)
 
 if __name__ == "__main__":
-    fig, ax = plt.subplots(1+(not single), 2, figsize=(12, 6*(1+(not single))))
+    fig, ax = plt.subplots(2, 2, figsize=(12, 12))
     ax = ax.flatten()
 
     fk = FlexKnot(0, 1)
@@ -53,10 +54,12 @@ if __name__ == "__main__":
     x = np.linspace(0, 1, 100)
     print(f"{ns[params]=}")
     plot_lines(f, x, ns[params], weights=ns.get_weights(), ax=ax[0])
-    plot_contours(f, x, ns[params], weights=ns.get_weights(), ax=ax[1])
-    for axi in ax[0], ax[1]:
+    # plot_contours(f, x, ns[params], weights=ns.get_weights(), ax=ax[1])
+    for axi in ax[0], :  # ax[1]:
         axi.set(xlabel="$a$", ylabel="$w(a)$",
                 xlim=(0, 1), ylim=(-3, 0))
+    ns.H0.plot.hist_1d(bins=40, ax=ax[1])
+    ax[1].set(xlabel='$H_0$')
     if not single:
         logZs = []
         logZerrs = []
@@ -67,16 +70,28 @@ if __name__ == "__main__":
         ax[2].errorbar(idx, logZs, yerr=logZerrs,
                        marker="+", linestyle="None")
         ax[2].set(xlabel="$N$", ylabel=r"$\log{Z_N}$")
+        from pypolychord.output import PolyChordOutput
 
-        def fz(z, theta):
-            theta = theta[~np.isnan(theta)]
-            return fk(1/(1+z), theta)
+        pclogZs = []
+        pclogZerrs = []
+        for i in idx:
+            pc = PolyChordOutput("chains", f"{name}_{i}")
+            pclogZs.append(pc.logZ)
+            pclogZerrs.append(pc.logZerr)
+        ax[2].errorbar(idx, pclogZs, yerr=pclogZerrs,
+                       marker='+', linestyle='None',
+                       color='m')
 
-        z = np.linspace(0, 1.2, 100)
-        plot_lines(fz, z, ns[params], weights=ns.get_weights(), ax=ax[3])
-        ax[3].set(xlabel="$z$", ylabel="$w(z)$",
-                  xlim=(0, 1), ylim=(-3, 0))
+    def fz(z, theta):
+        theta = theta[~np.isnan(theta)]
+        return fk(1/(1+z), theta)
+
+    z = np.logspace(-3, np.log10(2.5))
+    plot_lines(fz, z, ns[params], weights=ns.get_weights(), ax=ax[3])
+    ax[3].set(xlabel="$z$", ylabel="$w(z)$",
+              xlim=(min(z), max(z)), ylim=(-3, 0),
+              xscale='log')
 
     fig.savefig(f"plots/{name}_{n}{'_i' if single else ''}_wa.pdf",
                 bbox_inches='tight')
-    # plt.show()
+    plt.show()

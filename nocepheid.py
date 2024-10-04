@@ -4,6 +4,7 @@ from numpy import array, log10
 import pandas as pd
 from scipy.integrate import quad
 from scipy.stats import multivariate_normal
+import scipy
 import pypolychord
 from distances import dl
 from anesthetic import make_2d_axes
@@ -46,7 +47,7 @@ def ia_likelihood(Mb, h0, omegam, omegar, theta):
     mu = 5 * log10(dl(z, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
 
-    mu = (mu1 * iamask + mu2masked)
+    mu = mu1
     return gaussian.logpdf(Mb - mu)
 
 
@@ -58,16 +59,25 @@ def corrected_ia_likelihood(Mb, h0, omegam, omegar, theta):
     mu = 5 * log10(dl(zhd, zhel, h0, omegam, omegar, theta)) + 25
     mu1 = mbcorr - mu
 
-    mu = (mu1 * iamask + mu2masked)
+    mu = mu1
     return gaussian.logpdf(Mb - mu)
 
 
 one = np.ones(len(mcov))[:, None]
 invcov = np.linalg.inv(mcov)
 invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
+print(f"{mcov=}")
+print(f"{invcov_tilde.shape=}")
+print(f"{np.linalg.det(mcov)=}")
+print(f"{scipy.linalg.det(mcov)=}")
+print(f"{np.linalg.slogdet(mcov)=}")
+print(f"{one.T @ invcov @ one=}")
+lognormalisation = float(-0.5 * np.log(one.T @ invcov @ one))
+print(f"{lognormalisation=}")
 lognormalisation = 0.5 * (np.log(2*np.pi)
                           - np.linalg.slogdet(2 * np.pi * mcov)[1]
                           - float(np.log(one.T @ invcov @ one)))
+print(f"{lognormalisation=}")
 
 
 def marginalised(h0, omegam, omegar, theta):
@@ -79,10 +89,10 @@ def marginalised(h0, omegam, omegar, theta):
     return lognormalisation + float(-mu.T @ invcov_tilde @ mu / 2)
 
 
-# lower = array([-20, 20, 0.01])
-# upper = array([-18, 100, 0.99])
-lower = array([20, 0.01])
-upper = array([100, 0.99])
+lower = array([-20, 20, 0.01])
+upper = array([-18, 100, 0.99])
+# lower = array([20, 0.01])
+# upper = array([100, 0.99])
 prior_range = upper - lower
 
 flexknotprior = Prior(0, 1, -3, -0.01)
@@ -99,9 +109,9 @@ omegar = 8.24e-5
 
 
 def likelihood(theta):
-    h0, omegam, *theta = theta
-    # return ia_likelihood(Mb, h0, omegam, omegar, theta)
-    return marginalised(h0, omegam, omegar, theta)
+    Mb, h0, omegam, *theta = theta
+    return ia_likelihood(Mb, h0, omegam, omegar, theta)
+    # return marginalised(h0, omegam, omegar, theta)
 
 
 if __name__ == "__main__":
@@ -118,7 +128,7 @@ if __name__ == "__main__":
             return ia_likelihood(Mb, h0, omegam, omegar, np.array([-1]))
 
     paramnames = [
-        # ("Mb", r"M_\mathrm{b}"),
+        ("Mb", r"M_\mathrm{b}"),
         ("H0", r"H_0"),
         ("Omegam", r"\Omega_\mathrm{m}"),
     ]
@@ -136,7 +146,7 @@ if __name__ == "__main__":
             paramnames += [("w0", "w_0")]
 
     ndims = len(paramnames)
-    file_root = f"iamarginalised_{n}"
+    file_root = f"nocepheid_{n}"
 
     for i in range(1):
         print(i)

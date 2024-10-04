@@ -70,3 +70,11 @@ def dl(z, h0, omegam, omegar, theta):
     h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in z]
     q = cumulative_trapezoid(h_inverse, z, initial=0) + q0
     return (1+z) * c / h0 * q
+
+
+def corrected_dl(zhd, zhel, h0, omegam, omegar, theta):
+    q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, zhd[0])[0]
+    h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in zhd]
+    q = cumulative_trapezoid(h_inverse, zhd, initial=0) + q0
+    return (1+zhel) * c / h0 * q
+

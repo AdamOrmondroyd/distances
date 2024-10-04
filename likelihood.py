@@ -3,9 +3,9 @@ from pandas import read_csv
 from scipy.stats import multivariate_normal
 import distances
 
-data = read_csv("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
+data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
                 header=None, index_col=None, sep=r"\s+", comment="#")
-cov = loadtxt("bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
+cov = loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
 
 zs = data.iloc[:, 0].to_numpy()
 mean = data.iloc[:, 1].to_numpy()
