@@ -39,6 +39,6 @@ if __name__ == "__main__":
         sys.argv[1],
         [UniformPrior(3650, 18250), UniformPrior(0.01, 0.99)],
         "desi",
-        [(r"H0rd", r"H_0r_d"), (r"Omegam", r"\Omega_\mathrm{m}")],
+        [(r"H0rd", r"H_0r_\mathrm{d}"), (r"Omegam", r"\Omega_\mathrm{m}")],
         True,
     )

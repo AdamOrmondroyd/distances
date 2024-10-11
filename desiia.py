@@ -22,7 +22,7 @@ if __name__ == "__main__":
          UniformPrior(20, 100),
          UniformPrior(0.01, 0.99)],
         "desiia",
-        [(r"H0rd", r"H_0r_d"),
+        [(r"rd", r"r_\mathrm{d}"),
          ("H0", r"H_0"),
          (r"Omegam", r"\Omega_\mathrm{m}")],
         True,
