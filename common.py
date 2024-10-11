@@ -1,7 +1,7 @@
 import numpy as np
 import pypolychord
 from flexknot import Prior
-from cluster import xmeans
+from clustering import xmeans
 from anesthetic import make_2d_axes
 from mpi4py import MPI
 
