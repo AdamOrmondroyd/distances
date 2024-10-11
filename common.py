@@ -30,23 +30,20 @@ def flexknotparamnames(n):
     return p
 
 
-def run(likelihood, n, prior_lower, prior_upper,
+def run(likelihood, n, priors,
         file_root, paramnames, read_resume):
     paramnames += flexknotparamnames(n)
-    prior_lower = np.array(prior_lower)
-    prior_upper = np.array(prior_upper)
-    prior_range = prior_upper - prior_lower
     try:
         n = int(n)
 
         def prior(x):
             return np.concatenate([
-                prior_lower + x[:len(prior_range)] * prior_range,
-                flexknotprior(x[len(prior_range):])
+                [prior(xi) for xi, prior in zip(x, priors)],
+                flexknotprior(x[len(priors):])
             ])
     except ValueError:
         def prior(x):
-            return prior_lower + x * prior_range
+            return [prior(xi) for xi, prior in zip(x, priors)],
 
     ns = pypolychord.run(
         likelihood,
@@ -61,7 +58,7 @@ def run(likelihood, n, prior_lower, prior_upper,
     )
 
     if comm.rank == 0:
-        fig, axes = make_2d_axes([p[0] for p in paramnames[:len(prior_range)]])
+        fig, axes = make_2d_axes([p[0] for p in paramnames[:len(priors)]])
         ns.plot_2d(axes)
         fig.savefig(f"plots/{file_root}.pdf", bbox_inches='tight')
 
