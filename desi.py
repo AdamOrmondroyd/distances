@@ -17,7 +17,7 @@ di_over_rss = [getattr(distances, i.lower()) for i in data.iloc[:, 2]]
 gaussian = multivariate_normal(mean, cov)
 
 
-def logl_desi(h0rd, omegam, omegar, theta):
+def logl_desi(h0rd, omegam, omegar, theta=np.array([-1])):
     theta = np.array(theta)
     x = [
         di_over_rs(z, h0rd, omegam, omegar, theta)
