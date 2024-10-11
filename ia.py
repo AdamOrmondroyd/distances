@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import pandas as pd
+from pypolychord.priors import UniformPrior
 from common import run
 from distances import dl
 
