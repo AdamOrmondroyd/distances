@@ -12,6 +12,8 @@ import torch.nn.init as init
 ndims_A = int(sys.argv[1])
 
 data = np.load("sbi_data.npy")
+ndims_B = data.shape[1] - ndims_A
+data = scale(data)
 # data = data[:, :ndims_A*2]
 width = int(data.shape[1] * 1.1 + 20)
 
@@ -19,31 +21,31 @@ width = int(data.shape[1] * 1.1 + 20)
 class NeuralRatioEstimator(nn.Module):
     def __init__(self, ninput):
         super().__init__()
-        self.fc1 = nn.Linear(ninput, width)
-        self.lr1 = nn.LeakyReLU(width)
-        self.bn1 = nn.BatchNorm1d(width)
-        self.fc2 = nn.Linear(width, 64)
-        self.lr2 = nn.LeakyReLU(64)
-        self.bn2 = nn.BatchNorm1d(64)
-        self.fc3 = nn.Linear(64, 64)
-        self.lr3 = nn.LeakyReLU(64)
-        self.bn3 = nn.BatchNorm1d(64)
-        self.fc4 = nn.Linear(64, 64)
-        self.lr4 = nn.LeakyReLU(64)
-        self.bn4 = nn.BatchNorm1d(64)
-        self.fcn = nn.Linear(64, 1)
+        self.ia_layers = nn.ModuleList(
+            [nn.Linear(ndims_B, 25)] +
+            [nn.Linear(25, 25) for _ in range(5)])
+        self.hidden_layers = nn.ModuleList(
+            [nn.Linear(ndims_A + 25, 25)] +
+            [nn.Linear(25, 25) for _ in range(5)])
+        self.relu = nn.ReLU()
+        self.fcn = nn.Linear(25, 1)
 
-        # Initialize weights using Xavier initialization
-        for m in self.modules():
-            if isinstance(m, nn.Linear):
-                init.xavier_normal_(m.weight)
-                init.constant_(m.bias, 0)
+        # # Initialize weights using Xavier initialization
+        # for m in self.modules():
+        #     if isinstance(m, nn.Linear):
+        #         init.xavier_normal_(m.weight)
+        #         init.constant_(m.bias, 0)
 
     def forward(self, x):
-        x = F.relu(self.bn1(self.lr1(self.fc1(x))))
-        x = F.relu(self.bn2(self.lr2(self.fc2(x))))
-        x = F.relu(self.bn3(self.lr3(self.fc3(x))))
-        x = F.relu(self.bn4(self.lr4(self.fc4(x))))
+        for layer in self.ia_layers:
+            x = torch.cat(
+                (
+                    x[..., :ndims_A],
+                    self.relu(layer(x[..., ndims_A:]))
+                ),
+                axis=1)
+        for layer in self.hidden_layers:
+            x = self.relu(layer(x))
         return self.fcn(x)
 
 
@@ -54,10 +56,12 @@ data, samples = train_test_split(data, test_size=0.1)
 loss_fn = nn.BCEWithLogitsLoss()
 
 
+rng = np.random.default_rng()
 # harry says I can double my data by scrambling all of it and using it twice
+
+
 def scramble(x):
     # mix up half of the samples from data B
-    rng = np.random.default_rng()
     x_scrambled = x.copy()
     idx = rng.permutation(len(x_scrambled))
     x_scrambled[:, ndims_A:] = x_scrambled[idx, ndims_A:]
@@ -70,6 +74,11 @@ def scramble(x):
     x = x[idx]
     y = y[idx]
     return x, y
+
+
+def batch(x, y, batch_size):
+    idx = rng.permutation(len(x))[:batch_size]
+    return x[idx], y[idx]
 
 
 for i in range(5):
@@ -90,8 +99,10 @@ for i in range(5):
 
     model = NeuralRatioEstimator(ninput=data.shape[1]).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, 0.9)
 
     n_epochs = 500  # specify the number of epochs to train for
+    batch_size = 1000  # specify the batch size
 
     patience = 10  # Number of epochs to wait before early stopping
     min_delta = 1e-6  # Minimum change in loss to qualify as an improvement
@@ -103,12 +114,16 @@ for i in range(5):
     for epoch in range(n_epochs):
         model.train()  # Set model to training mode
 
-        y_pred = model(x_train.to(device))  # forward pass: compute predicted output
-        loss = loss_fn(y_pred.squeeze(), y_train.to(device))  # compute loss
+        for _ in range(len(x_train) // batch_size):
+            x_batch, y_batch = batch(x_train, y_train, batch_size)
 
-        optimizer.zero_grad()  # clear old gradients
-        loss.backward()  # compute gradients
-        optimizer.step()  # update parameters
+            y_pred = model(x_batch.to(device))
+
+            loss = loss_fn(y_pred.squeeze(), y_batch.to(device))  # compute loss
+
+            optimizer.zero_grad()  # clear old gradients
+            loss.backward()  # compute gradients
+            optimizer.step()  # update parameters
 
         y_pred_test = model(x_test.to(device))
         validation_loss = loss_fn(y_pred_test.squeeze(), y_test.to(device)).item()
