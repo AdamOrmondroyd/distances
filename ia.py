@@ -68,8 +68,7 @@ if __name__ == "__main__":
         ns = run(
             likelihood,
             sys.argv[1],
-            [20, 0.01],
-            [100, 0.99],
+            [UniformPrior(20, 100), UniformPrior(0.01, 0.99)],
             "cepheid",
             [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
             True,
