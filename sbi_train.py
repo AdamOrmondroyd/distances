@@ -22,7 +22,8 @@ class NeuralRatioEstimator(nn.Module):
     def __init__(self, ninput):
         super().__init__()
         self.ia_layers = nn.ModuleList(
-            [nn.Linear(ndims_B, 25)] +
+            [nn.Linear(ndims_B, width)] +
+            [nn.Linear(width, 25)] +
             [nn.Linear(25, 25) for _ in range(5)])
         self.hidden_layers = nn.ModuleList(
             [nn.Linear(ndims_A + 25, 25)] +
