@@ -5,8 +5,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import scale
 import torch
 from torch import nn
-import torch.nn.functional as F
-import torch.nn.init as init
 
 # need to know the number of input dimensions from A and B
 ndims_A = int(sys.argv[1])
