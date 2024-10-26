@@ -43,7 +43,7 @@ def run(likelihood, n, priors,
             ])
     except ValueError:
         def prior(x):
-            return [prior(xi) for xi, prior in zip(x, priors)],
+            return [prior(xi) for xi, prior in zip(x, priors)]
 
     ns = pypolychord.run(
         likelihood,
