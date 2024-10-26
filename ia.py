@@ -27,11 +27,11 @@ def mb_zs_mcov(df, mask):
                               - np.linalg.slogdet(2 * np.pi * mcov)[1]
                               - np.log((one.T @ invcov @ one).squeeze()))
 
-    return mb, zhd, zhel, mcov, invcov_tilde, lognormalisation
+    return mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation
 
 
-mb, zhd, zhel, mcov, invcov_tilde, lognormalisation = mb_zs_mcov(df, mask)
-mb_c, zhd_c, zhel_c, mcov_c, invcov_tilde_c, lognormalisation_c = mb_zs_mcov(df, cepheid_mask)
+mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation = mb_zs_mcov(df, mask)
+mb_c, zhd_c, zhel_c, mcov_c, invcov_c, invcov_tilde_c, lognormalisation_c = mb_zs_mcov(df, cepheid_mask)
 
 
 cephdist = df['CEPH_DIST'].to_numpy()[cepheid_mask]
