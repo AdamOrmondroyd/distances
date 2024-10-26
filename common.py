@@ -11,7 +11,7 @@ comm = MPI.COMM_WORLD
 flexknotprior = Prior(0, 1, -3, -0.01)
 
 
-def flexknotparamnames(n):
+def flexknotparamnames(n, tex=True):
     try:
         n = int(n)
     except ValueError:
@@ -27,6 +27,8 @@ def flexknotparamnames(n):
         ]
     if n >= 1:
         p += [("w0", "w_0")]
+    if not tex:
+        p = [pi[0] for pi in p]
     return p
 
 
