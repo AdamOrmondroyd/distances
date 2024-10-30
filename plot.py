@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from matplotlib import pyplot as plt
+import smplotlib
 from fgivenx import plot_lines, plot_contours
 from anesthetic import read_chains
 from anesthetic.samples import merge_samples_weighted
@@ -35,10 +36,11 @@ params = [p[0] for p in paramnames]
 
 if single:
     ns = read_chains(f"chains/{name}_{n}")
-    ns = ns.prior()
+    prior = ns.prior()
 else:
     idx = range(1, n+1)
     nss = [read_chains(f"chains/{name}_{i}") for i in idx]
+    prior = merge_samples_weighted([_ns.prior() for _ns in nss])
     ns = merge_samples_weighted(nss)
 
 if __name__ == "__main__":
@@ -53,12 +55,14 @@ if __name__ == "__main__":
 
     x = np.linspace(0, 1, 100)
     print(f"{ns[params]=}")
-    plot_lines(f, x, ns[params], weights=ns.get_weights(), ax=ax[0])
+    plot_lines(f, x, prior[params], weights=prior.get_weights(), ax=ax[0], color='C0')
+    plot_lines(f, x, ns[params], weights=ns.get_weights(), ax=ax[0], color='C1')
     # plot_contours(f, x, ns[params], weights=ns.get_weights(), ax=ax[1])
     for axi in ax[0], :  # ax[1]:
         axi.set(xlabel="$a$", ylabel="$w(a)$",
                 xlim=(0, 1), ylim=(-3, 0))
-    ns.H0.plot.hist_1d(bins=40, ax=ax[1])
+    prior.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5)
+    ns.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5)
     ax[1].set(xlabel='$H_0$')
     if not single:
         logZs = []
@@ -87,11 +91,13 @@ if __name__ == "__main__":
         return fk(1/(1+z), theta)
 
     z = np.logspace(-3, np.log10(2.5))
-    plot_lines(fz, z, ns[params], weights=ns.get_weights(), ax=ax[3])
+    plot_lines(fz, z, ns[params], weights=ns.get_weights(), ax=ax[3], color='C0')
+    plot_lines(fz, z, prior[params], weights=prior.get_weights(), ax=ax[3], color='C1')
     ax[3].set(xlabel="$z$", ylabel="$w(z)$",
               xlim=(min(z), max(z)), ylim=(-3, 0),
               xscale='log')
 
+    fig.suptitle(f"{name}_{n}{'_i' if single else ''}")
     fig.savefig(f"plots/{name}_{n}{'_i' if single else ''}_wa.pdf",
                 bbox_inches='tight')
     plt.show()
