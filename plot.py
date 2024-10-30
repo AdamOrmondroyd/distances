@@ -5,6 +5,7 @@ import smplotlib
 from fgivenx import plot_lines, plot_contours
 from anesthetic import read_chains
 from anesthetic.samples import merge_samples_weighted
+from common import flexknotparamnames
 from flexknot import FlexKnot
 
 if __name__ == "__main__":
@@ -19,18 +20,7 @@ else:
     n = 9
     single = False
 
-paramnames = []
-
-if n >= 2:
-    paramnames += [("wn", "w_n")]
-
-for i in range(n-2, 0, -1):
-    paramnames += [
-        (f"a{i}", f"a_{i}"),
-        (f"w{i}", f"w_{i}"),
-    ]
-if n >= 1:
-    paramnames += [("w0", "w_0")]
+paramnames = flexknotparamnames(n)
 
 params = [p[0] for p in paramnames]
 
