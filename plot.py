@@ -45,15 +45,20 @@ if __name__ == "__main__":
 
     x = np.linspace(0, 1, 100)
     print(f"{ns[params]=}")
-    plot_lines(f, x, prior[params], weights=prior.get_weights(), ax=ax[0], color='C0')
-    plot_lines(f, x, ns[params], weights=ns.get_weights(), ax=ax[0], color='C1')
+    plot_lines(f, x, prior[params], weights=prior.get_weights(),
+               ax=ax[0], color='C1')
+    plot_lines(f, x, ns[params], weights=ns.get_weights(),
+               ax=ax[0], color='C0')
     # plot_contours(f, x, ns[params], weights=ns.get_weights(), ax=ax[1])
     for axi in ax[0], :  # ax[1]:
         axi.set(xlabel="$a$", ylabel="$w(a)$",
                 xlim=(0, 1), ylim=(-3, 0))
-    prior.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5)
-    ns.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5)
-    ax[1].set(xlabel='$H_0$')
+    prior.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
+                          label='prior', color='C1')
+    ns.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
+                       label='posterior', color='C0')
+    ax[1].set(xlabel='$H_0$', xlim=(20, 100), ylim=(0, 1.35))
+    ax[1].legend(bbox_to_anchor=(1.05, 1), loc='upper right')
     if not single:
         logZs = []
         logZerrs = []
@@ -81,13 +86,16 @@ if __name__ == "__main__":
         return fk(1/(1+z), theta)
 
     z = np.logspace(-3, np.log10(2.5))
-    plot_lines(fz, z, ns[params], weights=ns.get_weights(), ax=ax[3], color='C0')
-    plot_lines(fz, z, prior[params], weights=prior.get_weights(), ax=ax[3], color='C1')
+    plot_lines(fz, z, prior[params], weights=prior.get_weights(),
+               ax=ax[3], color='C1')
+    plot_lines(fz, z, ns[params], weights=ns.get_weights(),
+               ax=ax[3], color='C0')
     ax[3].set(xlabel="$z$", ylabel="$w(z)$",
               xlim=(min(z), max(z)), ylim=(-3, 0),
               xscale='log')
 
     fig.suptitle(f"{name}_{n}{'_i' if single else ''}")
+    fig.tight_layout()
     fig.savefig(f"plots/{name}_{n}{'_i' if single else ''}_wa.pdf",
                 bbox_inches='tight')
     plt.show()
