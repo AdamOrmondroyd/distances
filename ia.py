@@ -22,16 +22,21 @@ def mb_zs_mcov(df, mask):
     mcov = cov[mask, :][:, mask]
     one = np.ones(len(mcov))[:, None]
     invcov = np.linalg.inv(mcov)
-    invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
+    a = (one.T @ invcov @ one).squeeze()
+    invcov_tilde = invcov - invcov @ one @ one.T @ invcov / a
     lognormalisation = 0.5 * (np.log(2*np.pi)
                               - np.linalg.slogdet(2 * np.pi * mcov)[1]
-                              - np.log((one.T @ invcov @ one).squeeze()))
+                              - np.log(a))
 
-    return mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation
+    return mb, zhd, zhel, mcov, invcov, invcov_tilde, a, one, lognormalisation
 
 
-mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation = mb_zs_mcov(df, mask)
-mb_c, zhd_c, zhel_c, mcov_c, invcov_c, invcov_tilde_c, lognormalisation_c = mb_zs_mcov(df, cepheid_mask)
+(mb, zhd, zhel, mcov,
+    invcov, invcov_tilde,
+    a, one, lognormalisation) = mb_zs_mcov(df, mask)
+(mb_c, zhd_c, zhel_c, mcov_c,
+    invcov_c, invcov_tilde_c,
+    a_c, one_c, lognormalisation_c) = mb_zs_mcov(df, cepheid_mask)
 
 
 cephdist = df['CEPH_DIST'].to_numpy()[cepheid_mask]
@@ -39,13 +44,17 @@ delta_c = mb_c - cephdist
 cephmask = 1 - ia_mask
 delta_c_masked = delta_c * cephmask
 
+rng = np.random.default_rng()
+
 
 def logl_ia(h0, omegam, omegar, theta=np.array([-1])):
     theta = np.array(theta)
     mu = 5 * np.log10(dl(zhd, zhel, h0, omegam, omegar, theta)) + 25
     x = mb - mu
+    b = (one.T @ invcov @ x + x.T @ invcov @ one)
+    absolute_m = rng.normal(b/(2*a), 1/np.sqrt(a)).squeeze()
 
-    return lognormalisation + float(-x.T @ invcov_tilde @ x / 2)
+    return lognormalisation + float(-x.T @ invcov_tilde @ x / 2), [absolute_m]
 
 
 def logl_cepheid(h0, omegam, omegar, theta=np.array([-1])):
@@ -53,7 +62,10 @@ def logl_cepheid(h0, omegam, omegar, theta=np.array([-1])):
     mu = 5 * np.log10(dl(zhd_c, zhel_c, h0, omegam, omegar, theta)) + 25
     x = mb_c - mu
     x = (x * ia_mask + delta_c_masked)
-    return lognormalisation_c + float(-x.T @ invcov_tilde_c @ x / 2)
+    b = (one_c.T @ invcov_c @ x + x.T @ invcov_c @ one_c)
+    absolute_m = rng.normal(b/(2*a), 1/np.sqrt(a)).squeeze()
+
+    return lognormalisation_c + float(-x.T @ invcov_tilde_c @ x / 2), [absolute_m]
 
 
 omegar = 8.24e-5
@@ -72,6 +84,7 @@ if __name__ == "__main__":
             "cepheid",
             [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
             True,
+            derived=[('Mb*', 'M_b')],
         )
 
     else:
@@ -86,4 +99,5 @@ if __name__ == "__main__":
             "ia",
             [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
             True,
+            derived=[('Mb*', 'M_b')],
         )

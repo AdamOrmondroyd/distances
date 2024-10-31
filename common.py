@@ -33,7 +33,8 @@ def flexknotparamnames(n, tex=True):
 
 
 def run(likelihood, n, priors,
-        file_root, paramnames, read_resume):
+        file_root, paramnames, read_resume,
+        derived=[]):
     paramnames += flexknotparamnames(n)
     try:
         n = int(n)
@@ -53,7 +54,8 @@ def run(likelihood, n, priors,
         prior=prior,
         nlive=1000,
         nprior=10_000,
-        paramnames=paramnames,
+        nDerived=len(derived),
+        paramnames=paramnames + derived,
         file_root=f"{file_root}_{n}",
         cluster=xmeans,
         read_resume=read_resume,
