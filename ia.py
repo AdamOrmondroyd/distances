@@ -4,11 +4,14 @@ import pandas as pd
 from pypolychord.priors import UniformPrior
 from common import run
 from distances import dl
+from pathlib import Path
 
 
 # data loading stolen from Toby
-df = pd.read_table('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES.dat', sep=' ', engine='python')
-cov = np.reshape(np.loadtxt('../clik_installs/desi/data/sn_data/PantheonPlus/Pantheon+SH0ES_STAT+SYS.cov', skiprows=1), [1701, 1701])
+path = Path('../clik_installs/desi/data/sn_data/PantheonPlus')
+df = pd.read_table(path/'Pantheon+SH0ES.dat', sep=' ', engine='python')
+cov = np.loadtxt(path/'Pantheon+SH0ES_STAT+SYS.cov', skiprows=1)
+cov = cov.reshape([-1, int(np.sqrt(len(cov)))])
 
 mask = df['zHD'] > 0.023
 cepheid_mask = (df['zHD'] > 0.023) | (df['IS_CALIBRATOR'] == 1)
