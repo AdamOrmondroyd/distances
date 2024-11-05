@@ -18,7 +18,7 @@ if __name__ == "__main__":
     ns = run(
         likelihood,
         sys.argv[1],
-        [GaussianPrior(147.09, 0.26),
+        [UniformPrior(3650, 18250),
          UniformPrior(20, 100),
          UniformPrior(0.01, 0.99)],
         "desiia",
