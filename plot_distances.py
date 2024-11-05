@@ -18,7 +18,7 @@ except IndexError:
 if single:
     ns = read_chains(f"chains/{name}_{n}")
 else:
-    idx = [1, 2, 5, 6, 7, 8, 9]
+    idx = range(1, n+1)
     nss = [read_chains(f"chains/{name}_{n}") for i in idx]
     ns = merge_samples_weighted(nss)
 
