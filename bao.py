@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.stats import multivariate_normal
-from pandas import read_csv
 from desi import data, cov
 
 
