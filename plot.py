@@ -5,6 +5,7 @@ import smplotlib
 from fgivenx import plot_lines, plot_contours
 from anesthetic import read_chains
 from anesthetic.samples import merge_samples_weighted
+from pypolychord.output import PolyChordOutput
 from common import flexknotparamnames
 from flexknot import FlexKnot
 
@@ -30,8 +31,10 @@ if single:
 else:
     idx = range(1, n+1)
     nss = [read_chains(f"chains/{name}_{i}") for i in idx]
+    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
     prior = merge_samples_weighted([_ns.prior() for _ns in nss])
-    ns = merge_samples_weighted(nss)
+    # ns = merge_samples_weighted(nss)
+    ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
 
 if __name__ == "__main__":
     fig, ax = plt.subplots(2, 2, figsize=(12, 12))
@@ -53,11 +56,13 @@ if __name__ == "__main__":
     for axi in ax[0], :  # ax[1]:
         axi.set(xlabel="$a$", ylabel="$w(a)$",
                 xlim=(0, 1), ylim=(-3, 0))
-    prior.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
-                          label='prior', color='C1')
-    ns.H0.plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
-                       label='posterior', color='C0')
-    ax[1].set(xlabel='$H_0$', xlim=(20, 100), ylim=(0, 1.35))
+    col = 'H0' if 'H0' in ns else 'H0rd'
+    prior[col].plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
+                            label='prior', color='C1')
+    ns[col].plot.hist_1d(bins=40, ax=ax[1], alpha=0.5,
+                         label='posterior', color='C0')
+    ax[1].set(xlabel=ns.get_label(col),
+              xlim=(20, 100) if col == 'H0' else (3650, 18250), ylim=(0, 1.35))
     ax[1].legend(bbox_to_anchor=(1.05, 1), loc='upper right')
     if not single:
         logZs = []
@@ -67,19 +72,20 @@ if __name__ == "__main__":
             logZs.append(logZi.mean())
             logZerrs.append(logZi.std())
         ax[2].errorbar(idx, logZs, yerr=logZerrs,
+                       label='anesthetic',
                        marker="+", linestyle="None")
         ax[2].set(xlabel="$N$", ylabel=r"$\log{Z_N}$")
-        from pypolychord.output import PolyChordOutput
 
         pclogZs = []
         pclogZerrs = []
-        for i in idx:
-            pc = PolyChordOutput("chains", f"{name}_{i}")
+        for i, pc in zip(idx, pcs):
             pclogZs.append(pc.logZ)
             pclogZerrs.append(pc.logZerr)
         ax[2].errorbar(idx, pclogZs, yerr=pclogZerrs,
+                       label='polychord',
                        marker='+', linestyle='None',
                        color='m')
+        ax[2].legend()
 
     def fz(z, theta):
         theta = theta[~np.isnan(theta)]
