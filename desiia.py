@@ -9,8 +9,7 @@ omegar = 8.24e-5
 
 
 def likelihood(theta):
-    rd, h0, omegam, *theta = theta
-    h0rd = h0 * rd
+    h0rd, h0, omegam, *theta = theta
     return logl_desi(h0rd, omegam, omegar, theta) + logl_ia(h0, omegam, omegar, theta)
 
 
