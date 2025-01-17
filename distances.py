@@ -1,8 +1,8 @@
-from numpy import concatenate, e, sqrt
+from numpy import concatenate, e, sqrt, log
 from scipy.integrate import quad, cumulative_trapezoid
 from scipy.constants import c
 from flexknot import FlexKnot
-from flexknot.utils import get_x_nodes_from_theta
+from flexknot.utils import get_x_nodes_from_theta, get_y_nodes_from_theta
 
 
 # c in units of km/s
@@ -11,7 +11,6 @@ c = c/1000
 w = FlexKnot(0, 1)
 wz = FlexKnot(0, 3)
 
-# TODO: do flexknot in redshift space
 
 def f_de_redshift(z, theta):
     x_nodes = get_x_nodes_from_theta(theta, False)
@@ -35,7 +34,6 @@ def f_de_redshift_analytic(z, theta):
     right_y_nodes = y_nodes[1:len(left_x_nodes)+1]
     m = (right_y_nodes - left_y_nodes) / (right_x_nodes - left_x_nodes)
     c = left_y_nodes - m * left_x_nodes
-    assert np.allclose(c, (left_y_nodes * right_x_nodes - right_y_nodes * left_x_nodes) / (right_x_nodes - left_x_nodes))
 
     one_plus_c_minus_m = 1 + c - m
     integrals = (
@@ -59,7 +57,6 @@ def f_de_analytic(z, theta):
 
     m = (left_w - right_w) / (left_a - right_a)
     one_plus_c = left_w - m * left_a + 1
-    assert np.allclose(one_plus_c, 1+(left_w * right_a - right_w * left_a) / (right_a - left_a))
 
     uppers = -one_plus_c * log(limits[1:]) - m * limits[1:]
     lowers = -one_plus_c * log(limits[:-1]) - m * limits[:-1]
