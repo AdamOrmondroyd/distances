@@ -114,7 +114,12 @@ def dh_over_rs(z, h0rd, omegam, omegar, theta, redshift=False):
 
 
 def dm_over_rs(z, h0rd, omegam, omegar, theta, redshift=False):
-    return c / h0rd * quad(lambda z: 1/h(z, omegam, omegar, theta, redshift), 0, z)[0]
+    z_nodes = (1 / get_x_nodes_from_theta(theta, False) - 1)[::-1]
+    z_nodes = concatenate([[0], z_nodes[z_nodes < z], [z]])
+    return c / h0rd * sum([
+        quad(lambda z: 1/h(z, omegam, omegar, theta, redshift), lower, upper)[0]
+        for lower, upper in zip(z_nodes[:-1], z_nodes[1:])
+    ])
 
 
 def dv_over_rs(z, h0rd, omegam, omegar, theta, redshift=False):
