@@ -23,8 +23,8 @@ def flexknotparamnames(n, redshift=False, tex=True):
 
     for i in range(n-2, 0, -1):
         p += [
-            (f"z{i}", f"z_{i}") if redshift else (f"a{i}", f"a_{i}"),
-            (f"w{i}", f"w_{i}"),
+            (f"z{i}", f"z_{{{i}}}") if redshift else (f"a{{{i}}}", f"a_{{{i}}}"),
+            (f"w{i}", f"w_{{{i}}}"),
         ]
     if n >= 1:
         p += [("w0", "w_0")]
