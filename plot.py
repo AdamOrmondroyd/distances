@@ -79,16 +79,7 @@ if __name__ == "__main__":
                kinds=dict(lower="kde_2d", diagonal="hist_1d", upper="scatter_2d"))
     # ax[1].legend(bbox_to_anchor=(1.05, 1), loc='upper right')
     if not single:
-        logZs = []
-        logZerrs = []
-        for nsi in nss:
-            logZi = nsi.logZ(nsamples=1_000)
-            logZs.append(logZi.mean())
-            logZerrs.append(logZi.std())
-        ax[2].errorbar(idx, logZs, yerr=logZerrs,
-                       label='anesthetic',
-                       marker="+", linestyle="None")
-        ax[2].set(xlabel="$N$", ylabel=r"$\log{Z_N}$")
+        ax[2].set(xlabel="$n$", ylabel=r"$\log{Z_n}$")
 
         pclogZs = []
         pclogZerrs = []
