@@ -86,11 +86,28 @@ if __name__ == "__main__":
         for i, pc in zip(idx, pcs):
             pclogZs.append(pc.logZ)
             pclogZerrs.append(pc.logZerr)
+        pclogZs, pclogZerrs = np.array(pclogZs), np.array(pclogZerrs)
+        try:
+            if cobaya:
+                lcdm = PolyChordOutput(f"/home/ano23/dp/desi/chains/nonlinear_pk_0/{name}/{name}_polychord_raw", name)
+            else:
+                lcdm = PolyChordOutput("chains", f"{name}_lcdm")
+            pclogZs -= lcdm.logZ
+            pclogZerrs = np.sqrt(pclogZerrs**2 + lcdm.logZerr**2)
+            ax[2].set(ylabel=r"$\log Z_n-\log Z_{\Lambda\text{CDM}}$")
+            logR = logsumexp(pclogZs) - np.log(n)
+            partials = np.e**(pclogZs - logsumexp(pclogZs))
+            logRerr = (np.sum((partials * pclogZs)**2) + lcdm.logZerr**2)**(0.5)
+            ax[2].set(title=f"$\\log Z_\\mathrm{{flexknot}} - \\log Z_{{\\Lambda\\text{{CDM}}}} = {logR:.2f} \\pm {logRerr:.2f}$")
+
+            ax[2].set_xticks(idx[::5])
+            ax[2].set_xticks(idx, minor=True)
+        except FileNotFoundError:
+            print("LCDM file not found :(")
         ax[2].errorbar(idx, pclogZs, yerr=pclogZerrs,
                        label='polychord',
                        marker='+', linestyle='None',
-                       color='m')
-        ax[2].legend()
+                       color=post_color)
 
     def fz(z, theta):
         theta = theta[~np.isnan(theta)]
