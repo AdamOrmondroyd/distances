@@ -14,21 +14,16 @@ print(df)
 cov = np.loadtxt(path/'covsys_000.txt', skiprows=1)
 cov = cov.reshape([-1, int(np.sqrt(len(cov)))])
 
-# mask = df['zHD'] > 0.023
-mask = np.full(len(df), True)
-
-
-mb = df['MU'].to_numpy()[mask]
-zhd = df['zHD'].to_numpy()[mask]
-zhel = df['zHEL'].to_numpy()[mask]
-delta = df['MUERR_FINAL'].to_numpy()[mask]
-mcov = cov[mask, :][:, mask]
-np.fill_diagonal(mcov, delta**2 + mcov.diagonal())
-one = np.ones(len(mcov))[:, None]
-invcov = np.linalg.inv(mcov)
+mb = df['MU'].to_numpy()
+zhd = df['zHD'].to_numpy()
+zhel = df['zHEL'].to_numpy()
+delta = df['MUERR_FINAL'].to_numpy()
+np.fill_diagonal(cov, delta**2 + cov.diagonal())
+one = np.ones(len(cov))[:, None]
+invcov = np.linalg.inv(cov)
 invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
 lognormalisation = 0.5 * (np.log(2*np.pi)
-                          - np.linalg.slogdet(2 * np.pi * mcov)[1]
+                          - np.linalg.slogdet(2 * np.pi * cov)[1]
                           - np.log((one.T @ invcov @ one).squeeze()))
 
 
