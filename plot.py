@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import numpy as np
+from scipy.special import logsumexp
 from matplotlib import pyplot as plt
 from matplotlib import gridspec
 import smplotlib
