@@ -16,8 +16,10 @@ if __name__ == "__main__":
     n = int(sys.argv[2])
     try:
         single = 'i' == sys.argv[3]
+        cobaya = 'cobaya' == sys.argv[3]
     except IndexError:
         single = False
+        cobaya = False
 else:
     name = "distances"
     n = 9
@@ -32,16 +34,24 @@ if single:
     prior = ns.prior()
 else:
     idx = range(1, n+1)
-    nss = [read_chains(f"chains/{name}_{i}") for i in idx]
-    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
+    if cobaya:
+        nss = [read_chains(f"/home/ano23/dp/desi/chains/nonlinear_pk_v{i}/{name}/{name}_polychord_raw/{name}") for i in idx]
+        pcs = [PolyChordOutput(f"/home/ano23/dp/desi/chains/nonlinear_pk_v{i}/{name}/{name}_polychord_raw", name) for i in idx]
+    else:
+        nss = [read_chains(f"chains/{name}_{i}") for i in idx]
+        pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
     prior = merge_samples_weighted([_ns.prior() for _ns in nss])
     # ns = merge_samples_weighted(nss)
     ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
 
+if "rdrag" in ns and "H0" in ns:
+    ns["H0rd"] = ns.rdrag * ns.H0
+    ns.set_label("H0rd", r"$H_0r_\mathrm{d}$")
+
 if __name__ == "__main__":
     prior_color = 'C0'
     post_color = 'C1'
-    cols = ['Omegam', 'H0' if 'H0' in ns else 'H0rd']
+    cols = ['omegam' if cobaya else 'Omegam', 'H0rd' if 'H0rd' in ns else 'H0']
     fig = plt.figure(figsize=(12, 12))
     gs = gridspec.GridSpec(2, 2)
     ax = [plt.subplot(gs[0, 0]), None,
@@ -104,9 +114,9 @@ if __name__ == "__main__":
               xlim=(min(z), max(z)), ylim=(-3, 0),
               xscale='log')
 
-    fig.suptitle(f"{name}_{n}{'_i' if single else ''}")
+    fig.suptitle(f"{'cobaya_' if cobaya else ''}{name}_{n}{'_i' if single else ''}")
     fig.tight_layout()
-    plotpath = Path("plots") / name
+    plotpath = Path("plots/cobaya") / name if cobaya else Path("plots") / name
     plotpath.mkdir(parents=True, exist_ok=True)
     fig.savefig(plotpath / f"{name}_{n}{'_i' if single else ''}_wa.pdf",
                 bbox_inches='tight')
