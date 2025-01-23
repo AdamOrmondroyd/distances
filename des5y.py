@@ -58,7 +58,7 @@ if __name__ == "__main__":
         likelihood,
         sys.argv[1],
         [UniformPrior(20, 100), UniformPrior(0.01, 0.99)],
-        "des5yr",
+        "des5y",
         [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
         True,
     )
