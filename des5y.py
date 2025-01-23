@@ -18,24 +18,18 @@ cov = cov.reshape([-1, int(np.sqrt(len(cov)))])
 mask = np.full(len(df), True)
 
 
-def mb_zs_mcov(df, mask):
-    mb = df['MU'].to_numpy()[mask]
-    zhd = df['zHD'].to_numpy()[mask]
-    zhel = df['zHEL'].to_numpy()[mask]
-    delta = df['MUERR_FINAL'].to_numpy()[mask]
-    mcov = cov[mask, :][:, mask]
-    np.fill_diagonal(mcov, delta**2 + mcov.diagonal())
-    one = np.ones(len(mcov))[:, None]
-    invcov = np.linalg.inv(mcov)
-    invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
-    lognormalisation = 0.5 * (np.log(2*np.pi)
-                              - np.linalg.slogdet(2 * np.pi * mcov)[1]
-                              - np.log((one.T @ invcov @ one).squeeze()))
-
-    return mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation
-
-
-mb, zhd, zhel, mcov, invcov, invcov_tilde, lognormalisation = mb_zs_mcov(df, mask)
+mb = df['MU'].to_numpy()[mask]
+zhd = df['zHD'].to_numpy()[mask]
+zhel = df['zHEL'].to_numpy()[mask]
+delta = df['MUERR_FINAL'].to_numpy()[mask]
+mcov = cov[mask, :][:, mask]
+np.fill_diagonal(mcov, delta**2 + mcov.diagonal())
+one = np.ones(len(mcov))[:, None]
+invcov = np.linalg.inv(mcov)
+invcov_tilde = invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
+lognormalisation = 0.5 * (np.log(2*np.pi)
+                          - np.linalg.slogdet(2 * np.pi * mcov)[1]
+                          - np.log((one.T @ invcov @ one).squeeze()))
 
 
 def logl_des5y(h0, omegam, omegar, theta=np.array([-1])):
