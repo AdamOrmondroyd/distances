@@ -10,6 +10,7 @@ from distances import dh_over_rs, dm_over_rs, dv_over_rs
 from bao import dmdhplot, dvplot
 from flexknot import FlexKnot
 import smplotlib
+from pypolychord.output import PolyChordOutput
 
 
 name = sys.argv[1]
@@ -24,7 +25,8 @@ if single:
 else:
     idx = range(1, n+1)
     nss = [read_chains(f"chains/{name}_{n}") for i in idx]
-    ns = merge_samples_weighted(nss)
+    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
+    ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
 
 ns = ns.compress()
 

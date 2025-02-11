@@ -9,6 +9,9 @@ from distances import dl
 from ia import df, mb, zhd, zhel, invcov, omegar
 from tqdm import tqdm
 from joblib import Parallel, delayed
+from flexknot import FlexKnot
+import smplotlib
+from pypolychord.output import PolyChordOutput
 
 
 name = sys.argv[1]
@@ -23,9 +26,13 @@ except IndexError:
 
 lcdm = read_chains(f"chains/{name}_lcdm")
 if single:
+    idx = [n]
     ns = read_chains(f"chains/{name}_{n}")
 else:
-    nss = [read_chains(f"chains/{name}_{n}") for i in range(1, n+1)]
+    idx = range(1, n+1)
+    nss = [read_chains(f"chains/{name}_{n}") for i in idx]
+    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
+    ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
     ns = merge_samples_weighted(nss)
 
 ns = ns.compress()
