@@ -9,10 +9,9 @@ from mpi4py import MPI
 comm = MPI.COMM_WORLD
 
 flexknotprior = Prior(0, 1, -3, -0.01)
-flexknotprior_redshift = Prior(0, 3, -3, -0.01)
 
 
-def flexknotparamnames(n, redshift=False, tex=True):
+def flexknotparamnames(n, tex=True):
     try:
         n = int(n)
     except ValueError:
@@ -23,7 +22,7 @@ def flexknotparamnames(n, redshift=False, tex=True):
 
     for i in range(n-2, 0, -1):
         p += [
-            (f"z{i}", f"z_{{{i}}}") if redshift else (f"a{i}", f"a_{{{i}}}"),
+            (f"a{i}", f"a_{{{i}}}"),
             (f"w{i}", f"w_{{{i}}}"),
         ]
     if n >= 1:
@@ -34,15 +33,15 @@ def flexknotparamnames(n, redshift=False, tex=True):
 
 
 def run(likelihood, n, priors,
-        file_root, paramnames, read_resume, redshift=False):
-    paramnames += flexknotparamnames(n, redshift)
+        file_root, paramnames, read_resume):
+    paramnames += flexknotparamnames(n)
     try:
         n = int(n)
 
         def prior(x):
             return np.concatenate([
                 [prior(xi) for xi, prior in zip(x, priors)],
-                flexknotprior_redshift(x[len(priors):]) if redshift else flexknotprior(x[len(priors):])
+                flexknotprior(x[len(priors):])
             ])
     except ValueError:
         def prior(x):
