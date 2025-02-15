@@ -99,3 +99,10 @@ def dl(zhd, zhel, h0, omegam, omegar, theta):
     h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in zhd]
     q = cumulative_trapezoid(h_inverse, zhd, initial=0) + q0
     return (1+zhel) * c / h0 * q
+
+
+def h0_dl_over_c(zhd, zhel, omegam, omegar, theta):
+    q0 = quad(lambda z: 1/h(z, omegam, omegar, theta), 0, zhd[0])[0]
+    h_inverse = [1 / h(zi, omegam, omegar, theta) for zi in zhd]
+    q = cumulative_trapezoid(h_inverse, zhd, initial=0) + q0
+    return (1+zhel) * q

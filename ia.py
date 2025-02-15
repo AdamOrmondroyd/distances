@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from pypolychord.priors import UniformPrior
 from common import run
-from distances import dl
+from distances import dl, dl_no_h0, c
 from pathlib import Path
 
 
@@ -43,12 +43,24 @@ cephmask = 1 - ia_mask
 delta_c_masked = delta_c * cephmask
 
 
-def logl_ia(h0, omegam, omegar, theta=np.array([-1])):
-    theta = np.array(theta)
-    mu = 5 * np.log10(dl(zhd, zhel, h0, omegam, omegar, theta)) + 25
-    x = mb - mu
+h0min, h0max = 20, 100
 
-    return lognormalisation + float(-x.T @ invcov_tilde @ x / 2)
+# precompute some matrices
+one = np.ones(len(mcov))[:, None]
+onesigma_times_5_over_log10 = one.T @ invcov_tilde * 5 / log(10)
+new_lognormalisation = lognormalisation + log(c/(1e-5 * (h0max - h0min)))
+a = 1e-5 * h0min / c
+b = 1e-5 * h0max / c
+
+
+def logl_ia(omegam, omegar, theta=np.array([-1])):
+    theta = np.array(theta)
+    y = 5 * log10(h0_dl_over_c(zhd, zhel, omegam, omegar, theta)) - mb
+    capital_y = float((onesigma_times_5_over_log10 @ y).squeeze())
+    return (
+        - float(y.T @ invcov_tilde @ y / 2)
+        + log((b**(capital_y + 1) - a**(capital_y + 1)) / (capital_y + 1))
+        + new_lognormalisation)
 
 
 def logl_cepheid(h0, omegam, omegar, theta=np.array([-1])):
@@ -64,6 +76,7 @@ omegar = 8.24e-5
 if __name__ == "__main__":
 
     if len(sys.argv) > 2 and "cepheid" in sys.argv[2]:
+        raise NotImplementedError("Still need to marginalise cepheid likelihood over H0")
         def likelihood(theta):
             h0, omegam, *theta = theta
             return logl_cepheid(h0, omegam, omegar, theta)
@@ -71,22 +84,22 @@ if __name__ == "__main__":
         ns = run(
             likelihood,
             sys.argv[1],
-            [UniformPrior(20, 100), UniformPrior(0.01, 0.99)],
+            [UniformPrior(0.01, 0.99)],
             "cepheid",
-            [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
+            [("Omegam", r"\Omega_\mathrm{m}")],
             True,
         )
 
     else:
         def likelihood(theta):
-            h0, omegam, *theta = theta
-            return logl_ia(h0, omegam, omegar, theta)
+            omegam, *theta = theta
+            return logl_ia(omegam, omegar, theta)
 
         ns = run(
             likelihood,
             sys.argv[1],
-            [UniformPrior(20, 100), UniformPrior(0.01, 0.99)],
+            [UniformPrior(0.01, 0.99)],
             "ia",
-            [("H0", r"H_0"), ("Omegam", r"\Omega_\mathrm{m}")],
+            [("Omegam", r"\Omega_\mathrm{m}")],
             True,
         )
