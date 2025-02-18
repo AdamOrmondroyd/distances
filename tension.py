@@ -10,11 +10,9 @@ likelihoods = sys.argv[2:]
 
 try:
     adaptive = True
-    char = ""
     n = int(sys.argv[1])
 except ValueError:
     adaptive = False
-    char = sys.argv[1][0]
     n = int(sys.argv[1][1:])
 
 
