@@ -1,9 +1,10 @@
 import sys
 import numpy as np
 import pandas as pd
+from numpy import log, log10
 from pypolychord.priors import UniformPrior
 from common import run
-from distances import dl, dl_no_h0, c
+from distances import dl, h0_dl_over_c, c
 from pathlib import Path
 
 
