@@ -12,15 +12,12 @@ from pypolychord.output import PolyChordOutput
 from common import flexknotparamnames
 from flexknot import FlexKnot
 
-
-def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, cols=None):
-    paramnames = flexknotparamnames(n)
-
-    params = [p[0] for p in paramnames]
-
+def collect_chains(name, n, single=False, cobaya=False):
+    """Returns idx, ns, nss, pcs, prior"""
     if single:
         ns = read_chains(f"chains/{name}_{n}")
         prior = ns.prior()
+        idx = [n]
     else:
         idx = range(1, n+1)
         if cobaya:
@@ -32,6 +29,15 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
         prior = merge_samples_weighted([_ns.prior() for _ns in nss])
         # ns = merge_samples_weighted(nss)
         ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
+    return idx, ns, nss, pcs, prior
+
+
+def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, cols=None):
+    paramnames = flexknotparamnames(n)
+
+    params = [p[0] for p in paramnames]
+
+    idx, ns, nss, pcs, prior = collect_chains(name, n, single, cobaya)
 
     if "rdrag" in ns and "H0" in ns:
         ns["H0rd"] = ns.rdrag * ns.H0

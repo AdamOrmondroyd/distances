@@ -55,9 +55,9 @@ nssH1s = [read_chainss(likelihood, n) for likelihood in likelihoods]
 
 for i in range(1, n+1):
     print(f"{i=}")
-    logZH0 = logZ(nssH0[i-1:i], i)
+    logZH0 = logZ(nssH0[:i], i)
     logZH1 = np.sum(
-        [logZ(nssH1[i-1:i], i) for nssH1 in nssH1s],
+        [logZ(nssH1[:i], i) for nssH1 in nssH1s],
         axis=0,
     )
     logZs.append(logZH0)
@@ -68,7 +68,7 @@ for i in range(1, n+1):
     print(f"logR={logR.mean()}±{logR.std()}")
     logRs.append(logR)
 
-    logLPH0 = logLP(nssH0[i-1:i], i)
+    logLPH0 = logLP(nssH0[:i], i)
     logLPH1 = np.sum(
         [logLP(nssH1[:i], i) for nssH1 in nssH1s],
         axis=0,
