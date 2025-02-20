@@ -129,8 +129,8 @@ def plot_distances(name, n, single, color='C2', axs=None, dmdhgreys={}, dvgreys=
     axs[2].fill_between(a, mean-sigma, mean+sigma, color=color, alpha=0.5)
 
     if sdss:
-        baotemp.dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dmdhgreys)
-        baotemp.dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dvgreys)
+        baosdss.dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dmdhgreys)
+        baosdss.dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dvgreys)
     else:
         dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dmdhgreys)
         dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dvgreys)
