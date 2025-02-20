@@ -25,15 +25,7 @@ except IndexError:
     single = False
 
 lcdm = read_chains(f"chains/{name}_lcdm")
-if single:
-    idx = [n]
-    ns = read_chains(f"chains/{name}_{n}")
-else:
-    idx = range(1, n+1)
-    nss = [read_chains(f"chains/{name}_{n}") for i in idx]
-    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
-    ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
-    ns = merge_samples_weighted(nss)
+idx, ns, nss, pcs, prior = collect_chains(name, n, single)
 
 ns = ns.compress()
 
