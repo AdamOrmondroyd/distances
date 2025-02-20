@@ -180,7 +180,6 @@ if __name__ == "__main__":
     # ax[2].iloc[2, 1].remove()
 
     # fig.suptitle(f"{'cobaya_' if cobaya else ''}{name}_{n}{'_i' if single else ''}")
-    fig.tight_layout()
     plotpath = Path("plots") / name
     plotpath.mkdir(parents=True, exist_ok=True)
     # fig.savefig(plotpath / f"desi_vs_pantheon_{n}{'_i' if single else ''}.png",
