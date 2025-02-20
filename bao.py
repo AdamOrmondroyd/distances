@@ -32,23 +32,29 @@ labelmh = labelv[[zvi in zmh for zvi in zv]]
 colormh = colorv[[zvi in zmh for zvi in zv]]
 
 
-def dvplot(ax):
+def dvplot(ax, lcdm=None, grey={}):
     d0 = (dv / zv**(2/3))
     d0err = d0.std(axis=0)
     d0 = d0.mean(axis=0)
-    for zi, d, derr, label, color in zip(zv, d0, d0err, labelv, colorv):
-        ax.errorbar(zi, d, yerr=derr, marker="+", color=color, label=label)
-    ax.set(xlabel=r"$z$", ylabel=r"$D_\text{V}/(r_\text{d}z^{2/3})$")
+    if lcdm is not None:
+        d0 -= lcdm(1/(1+zv))
+    for i, (zi, d, derr, label, color) in enumerate(zip(zv, d0, d0err, labelv, colorv)):
+        ax.errorbar(1/(1+zi), d, yerr=derr, marker="+", color=color, label=label, alpha=0.25 if i in grey else 1)
+    ax.set(xlabel=r"$a$", ylabel=r"$D_\text{V}/(r_\text{d}z^{2/3})$")
     return ax
 
 
-def dmdhplot(ax):
+def dmdhplot(ax, lcdm=None, grey={}):
     d1 = (dm / (dh * zmh))
     d1err = d1.std(axis=0)
     d1 = d1.mean(axis=0)
-    for zi, d, derr, label, color in zip(zmh, d1, d1err, labelmh, colormh):
-        ax.errorbar(zi, d, yerr=derr, marker="+", color=color, label=label)
-    ax.set(xlabel=r"$z$", ylabel=r"$D_\text{M}/(zD_{H})$")
+    if lcdm is not None:
+        d1 -= lcdm(1/(1+zmh))
+        ax.set(xlabel=r"$a$", ylabel=r"$D_\text{M}/(zD_{H}) - \left(D_\text{M}/(zD_{H})\right)_{\Lambda\mathrm{CDM}}$")
+    else:
+        ax.set(xlabel=r"$a$", ylabel=r"$D_\text{M}/(zD_{H}) - \left(D_\text{M}/(zD_{H})\right)_{\Lambda\mathrm{CDM}}$")
+    for i, (zi, d, derr, label, color) in enumerate(zip(zmh, d1, d1err, labelmh, colormh)):
+        ax.errorbar(1/(1+zi), d, yerr=derr, marker="+", color=color, label=label, alpha=0.25 if i in grey else 1)
     return ax
 
 
