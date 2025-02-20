@@ -11,7 +11,7 @@ c = c/1000
 w = FlexKnot(0, 1)
 
 
-def f_de_analytic(z, theta):
+def f_de(z, theta):
     a = 1 / (1 + z)
     ai = get_x_nodes_from_theta(theta, False)[::-1]
     wi = get_y_nodes_from_theta(theta, False)[::-1]
@@ -34,22 +34,6 @@ def f_de_analytic(z, theta):
     return result
 
 
-def f_de(z, theta):
-    # split integral by flexknot nodes
-    x_nodes = get_x_nodes_from_theta(theta, False)
-    x_nodes = x_nodes[x_nodes > 1 / (1+z)]
-    limits = concatenate([
-        [0],
-        (1 / x_nodes - 1)[::-1],
-        [z],
-    ])
-    integral = sum([
-        quad(lambda z: (1 + w(1/(1+z), theta)) / (1 + z), lower, upper)[0]
-        for lower, upper in zip(limits[:-1], limits[1:])
-    ])
-    return e**(3*integral)
-
-
 def h(z, omegam, omegar, theta):
     """
     H(z) / H0
@@ -57,7 +41,7 @@ def h(z, omegam, omegar, theta):
     return sqrt(
         omegam * (1 + z)**3
         + omegar * (1 + z)**4
-        + (1 - omegam - omegar) * f_de_analytic(z, theta)
+        + (1 - omegam - omegar) * f_de(z, theta)
     )
 
 
