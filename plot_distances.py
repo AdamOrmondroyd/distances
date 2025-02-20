@@ -7,52 +7,14 @@ from anesthetic import read_chains
 from anesthetic.samples import merge_samples_weighted
 from fgivenx import plot_lines
 from distances import dh_over_rs, dm_over_rs, dv_over_rs
+from common import flexknotparamnames
 from bao import dmdhplot, dvplot
+import baosdss
 from flexknot import FlexKnot
 import smplotlib
 from pypolychord.output import PolyChordOutput
-
-
-name = sys.argv[1]
-n = int(sys.argv[2])
-try:
-    single = 'i' == sys.argv[3]
-except IndexError:
-    single = False
-
-if single:
-    ns = read_chains(f"chains/{name}_{n}")
-else:
-    idx = range(1, n+1)
-    nss = [read_chains(f"chains/{name}_{n}") for i in idx]
-    pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
-    ns = merge_samples_weighted(nss, weights=[pc.logZ for pc in pcs])
-
-ns = ns.compress()
-
-# H0rd, Omegam, flexknot
-
-omegar = 8.24e-5
-
-params = [
-    "H0rd",
-    "Omegam",
-]
-
-if n >= 2:
-    params += ["wn"]
-
-for i in range(n-2, 0, -1):
-    params += [
-        f"a{i}",
-        f"w{i}",
-    ]
-if n >= 1:
-    params += ["w0"]
-
-print(ns)
-print(f"{ns.columns=}")
-print(f"{params=}")
+from plot import collect_chains
+from desi import omegar
 
 
 def dm_over_zdh(a, theta):
@@ -79,77 +41,144 @@ def dv_over_rdz23(a, theta):
     ]
 
 
-fig, axs = plt.subplots(3, figsize=(6, 14))
-# z = np.linspace(0.01, 2.5)
-a = np.linspace(0, 1)
-try:
-    lcdm = read_chains(f"chains/{name}_lcdm")
-    # plot_lines(dm_over_zdh, a, lcdm[params[:2]], weights=lcdm.get_weights(),
-    # plot_lines(lambda a, theta: dm_over_zdh(a, theta) - lcdm_dm_over_zdh,
-    #            color='C5',
-    #            ax=axs[0],
-    #            cache=f"cache/{name}_dm_over_zdh_lcdm",
-    #            parallel=True)
-    # plot_lines(dv_over_rdz23, a, lcdm[params[:2]], weights=lcdm.get_weights(),
-    #            color='C5',
-    #            ax=axs[1],
-    #            cache=f"cache/{name}_dv_over_rdz23_lcdm",
-    #            parallel=True)
-    lcdm_dm_over_zdh = np.array(dm_over_zdh(a, lcdm[params[:2]].to_numpy()[-1]))
-    lcdm_dv_over_rdz23 = np.array(dv_over_rdz23(a, lcdm[params[:2]].to_numpy()[-1]))
-    print(f"{lcdm_dm_over_zdh=}")
-    plot_lines(lambda a, theta: dm_over_zdh(a, theta) - lcdm_dm_over_zdh,
-               a, ns[params], weights=ns.get_weights(), ax=axs[0],
-               cache=f"cache/{name}_dm_over_zdh_{n}{'_i' if single else ''}",
-               color='C2',
-               parallel=True)
-    plot_lines(lambda a, theta: dv_over_rdz23(a, theta) - lcdm_dv_over_rdz23,
-               a, ns[params], weights=ns.get_weights(), ax=axs[1],
-               cache=f"cache/{name}_dv_over_rdz23_{n}{'_i' if single else ''}",
-               color='C2',
-               parallel=True)
+def plot_distances(name, n, single, color='C2', axs=None, dmdhgreys={}, dvgreys={}, sdss=False):
+    idx, ns, nss, pcs, prior = collect_chains(name, n, single)
 
-except FileNotFoundError:
-    print("lcdm not found")
+    ns = ns.compress()
 
-    plot_lines(dm_over_zdh, a, ns[params], weights=ns.get_weights(), ax=axs[0],
-               cache=f"cache/{name}_dm_over_zdh_{n}{'_i' if single else ''}",
-               color='C2',
-               parallel=True)
-    plot_lines(dv_over_rdz23, a, ns[params], weights=ns.get_weights(), ax=axs[1],
-               cache=f"cache/{name}_dv_over_rdz23_{n}{'_i' if single else ''}",
-               color='C2',
-               parallel=True)
+    # H0rd, Omegam, flexknot
 
-fk = FlexKnot(0, 1)
+    params = [
+        "H0rd",
+        "Omegam",
+    ]
+
+    params += flexknotparamnames(n, tex=False)
+
+    print(ns)
+    print(f"{ns.columns=}")
+    print(f"{params=}")
+
+    if axs is None:
+        fig, axs = plt.subplots(3, figsize=(6, 14))
+    # z = np.linspace(0.01, 2.5)
+    a = np.linspace(0.001, 0.999)
+    try:
+        lcdm = read_chains(f"chains/{name}_lcdm")
+        # plot_lines(dm_over_zdh, a, lcdm[params[:2]], weights=lcdm.get_weights(),
+        # plot_lines(lambda a, theta: dm_over_zdh(a, theta) - lcdm_dm_over_zdh,
+        #            color='C5',
+        #            ax=axs[0],
+        #            cache=f"cache/{name}_dm_over_zdh_lcdm",
+        #            parallel=True)
+        # plot_lines(dv_over_rdz23, a, lcdm[params[:2]], weights=lcdm.get_weights(),
+        #            color='C5',
+        #            ax=axs[1],
+        #            cache=f"cache/{name}_dv_over_rdz23_lcdm",
+        #            parallel=True)
+        lcdm_dm_over_zdh = np.array(dm_over_zdh(a, lcdm[params[:2]].to_numpy()[-1]))
+        lcdm_dv_over_rdz23 = np.array(dv_over_rdz23(a, lcdm[params[:2]].to_numpy()[-1]))
+        print(f"{lcdm_dm_over_zdh=}")
+        fsamps = plot_lines(lambda a, theta: dm_over_zdh(a, theta) - lcdm_dm_over_zdh,
+                   a, ns[params], weights=ns.get_weights(), ax=axs[0],
+                   cache=f"cache/{name}_dm_over_zdh_{n}{'_i' if single else ''}",
+                   color=color,
+                   parallel=True)
+        mean = np.mean(fsamps, axis=-1)
+        sigma = np.std(fsamps, axis=-1)
+        axs[0].plot(a, mean, color=color, linestyle='--')
+        axs[0].fill_between(a, mean-sigma, mean+sigma, color=color, alpha=0.5)
+
+        fsamps = plot_lines(lambda a, theta: dv_over_rdz23(a, theta) - lcdm_dv_over_rdz23,
+                   a, ns[params], weights=ns.get_weights(), ax=axs[1],
+                   cache=f"cache/{name}_dv_over_rdz23_{n}{'_i' if single else ''}",
+                   color=color,
+                   parallel=True)
+        mean = np.mean(fsamps, axis=-1)
+        sigma = np.std(fsamps, axis=-1)
+        axs[1].plot(a, mean, color=color, linestyle='--')
+        axs[1].fill_between(a, mean-sigma, mean+sigma, color=color, alpha=0.5)
+
+    except FileNotFoundError:
+        print("lcdm not found")
+
+        plot_lines(dm_over_zdh, a, ns[params], weights=ns.get_weights(), ax=axs[0],
+                   cache=f"cache/{name}_dm_over_zdh_{n}{'_i' if single else ''}",
+                   color=color,
+                   parallel=True)
+        plot_lines(dv_over_rdz23, a, ns[params], weights=ns.get_weights(), ax=axs[1],
+                   cache=f"cache/{name}_dv_over_rdz23_{n}{'_i' if single else ''}",
+                   color=color,
+                   parallel=True)
+        axs[2].set(ylim=(-0.25, 0.25))
+
+    fk = FlexKnot(0, 1)
 
 
-def fa(a, theta):
-    theta = theta[~np.isnan(theta)]
-    return fk(a, theta)
+    def fa(a, theta):
+        theta = theta[~np.isnan(theta)]
+        return fk(a, theta)
 
 
-plot_lines(fa, a, ns[params[2:]], weights=ns.get_weights(),
-           ax=axs[2], color='C2')
+    fsamps = plot_lines(fa, a, ns[params[2:]], weights=ns.get_weights(),
+                        ax=axs[2], color=color)
+    # axs[2].plot(a, np.average(fsamps, axis=1, weights=ns.get_weights()), color=color, linestyle='--')
+    mean = np.mean(fsamps, axis=-1)
+    sigma = np.std(fsamps, axis=-1)
+    axs[2].plot(a, mean, color=color, linestyle='--')
+    axs[2].fill_between(a, mean-sigma, mean+sigma, color=color, alpha=0.5)
 
-dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]))
-dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]))
-axs[1].legend()
-axs[0].axhline(0, linestyle="--")
-axs[1].axhline(0, linestyle="--")
-axs[2].axhline(-1, linestyle="--")
-axs[2].set(xlabel='$a$', ylabel='$w(a)$')
-for ax in axs:
-    ax.set(xlim=(0, 1))
-# axs[0].set(ylim=(17, 21.5))
-# axs[1].set(ylim=(0.95, 2.1))
-axs[2].set(ylim=(-3, 0))
+    if sdss:
+        baotemp.dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dmdhgreys)
+        baotemp.dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dvgreys)
+    else:
+        dmdhplot(axs[0], partial(dm_over_zdh, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dmdhgreys)
+        dvplot(axs[1], partial(dv_over_rdz23, theta=lcdm[params[:2]].to_numpy()[-1]), grey=dvgreys)
+    axs[0].axhline(0, linestyle="--")
+    axs[1].axhline(0, linestyle="--")
+    axs[2].axhline(-1, linestyle="--")
+    axs[2].set(xlabel='$a$', ylabel='$w(a)$')
+    for ax in axs:
+        ax.set(xlim=(0, 1))
+    # axs[0].set(ylim=(17, 21.5))
+    # axs[1].set(ylim=(0.95, 2.1))
+    axs[0].set(ylim=(-0.25, 0.25))
+    axs[1].set(ylim=(-1.25, 1.25))
+    axs[2].set(ylim=(-3, 0))
 
 
-fig.tight_layout()
+if __name__ == "__main__":
+    name = sys.argv[1]
+    n = int(sys.argv[2])
+    try:
+        single = 'i' == sys.argv[3]
+    except IndexError:
+        single = False
 
-plotpath = Path("plots") / name
-plotpath.mkdir(parents=True, exist_ok=True)
-fig.savefig(plotpath / f"{name}_{n}_distances{'_i' if single else ''}.pdf",
-            bbox_inches='tight')
-plt.show()
+    fig, ax = plt.subplots(3, 5, figsize=(22, 16), sharex='col', sharey='row', gridspec_kw={"wspace": 0, "hspace": 0})
+    plot_distances("desi", n, single, '#58acbc', ax[:, 0])
+    plot_distances("desi_no_first_lrg", n, single, '#58acbc', ax[:, 1], dmdhgreys={0}, dvgreys={1})
+    plot_distances("desi_no_second_lrg", n, single, '#58acbc', ax[:, 2], dmdhgreys={1}, dvgreys={2})
+    plot_distances("desi_neither_lrg", n, single, '#58acbc', ax[:, 3], dmdhgreys={0, 1}, dvgreys={1, 2})
+    plot_distances("desi_sdss", n, single, '#867db8', ax[:, 4], sdss=True)
+    for _ax in ax[:, 1:].flatten():
+        _ax.set(ylabel="")
+    for _ax in ax[:-1, :].flatten():
+        _ax.set(xlabel="")
+    for _ax in ax[-1, :-1].flatten():
+        _ax.get_xticklabels()[-1].set_visible(False)
+    for _ax, title in zip(ax[0, :].flatten(), ["DESI", r"remove $z=0.510$ ($a=0.662$)", r"remove $z=0.706$ ($a=0.586$)", "remove both", "replace with SDSS LRGs"]):
+        _ax.set(title=title)
+
+    ax[1, 0].legend(fontsize='small', loc='lower left')
+    ax[1, -1].legend(fontsize='small', loc='lower left')
+    # fig, ax = plt.subplots(3, figsize=(6, 16), sharex='col', gridspec_kw={"wspace": 0, "hspace": 0})
+    # plot_distances(name, n, single, "#867db8", ax)
+    # ax[1].legend(fontsize='small', loc='lower left')
+    fig.tight_layout()
+
+    plotpath = Path("plots") / name
+    plotpath.mkdir(parents=True, exist_ok=True)
+    fig.savefig(plotpath / f"{name}_{n}_distances{'_i' if single else ''}.pdf",
+                bbox_inches='tight')
+    plt.show()
