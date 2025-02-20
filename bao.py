@@ -54,6 +54,8 @@ def dmdhplot(ax):
 
 if __name__ == "__main__":
     from matplotlib import pyplot as plt
+    import smplotlib
+
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(12, 6))
     dvplot(ax0)
     dmdhplot(ax1)
