@@ -124,6 +124,9 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
                        marker='+', linestyle='None',
                        color=color)
         if label is not None: ax[1].legend()
+    else:
+        from PIL import Image
+        ax[1].imshow(np.asarray(Image.open("why_is_it_empty.png")), origin='lower', extent=(0, 1, 0, 1))
 
     def fz(z, theta):
         theta = theta[~np.isnan(theta)]
