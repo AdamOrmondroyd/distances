@@ -33,14 +33,13 @@ class IaLogL:
             one.T @ self.invcov_tilde * 5 / log(10)
         )
 
-    def y(self, omegam, omegar, theta=array([-1])):
+    def _y(self, omegam, omegar, theta=array([-1])):
         theta = array(theta)
         return 5 * log10(
-            h0_dl_over_c(self.zhd, self.zhel, omegam, omegar, theta)
-        ) - self.mb
+            h0_dl_over_c(self.zhd, self.zhel, omegam, omegar, theta)) - self.mb
 
     def __call__(self, omegam, omegar, theta=array([-1])):
-        y = self.y(omegam, omegar, theta)
+        y = self._y(omegam, omegar, theta)
         capital_y = float((self.onesigma_times_5_over_log10 @ y).squeeze())
         return (
             - float(y.T @ self.invcov_tilde @ y / 2)
