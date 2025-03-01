@@ -28,8 +28,8 @@ omegar = 8.24e-5
 if __name__ == "__main__":
 
     def likelihood(theta):
-        h0, omegam, *theta = theta
-        return logl_des5y(h0, omegam, omegar, theta)
+        omegam, *theta = theta
+        return logl_des5y(omegam, omegar, theta)
 
     ns = run(
         likelihood,
