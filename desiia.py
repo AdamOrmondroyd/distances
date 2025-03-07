@@ -2,7 +2,7 @@ import sys
 from common import run
 from pypolychord.priors import GaussianPrior, UniformPrior
 from desi import logl_desi
-from ia import logl_ia
+from pantheon import logl_pantheon
 
 
 omegar = 8.24e-5
@@ -10,7 +10,7 @@ omegar = 8.24e-5
 
 def likelihood(theta):
     h0rd, omegam, *theta = theta
-    return logl_desi(h0rd, omegam, omegar, theta) + logl_ia(omegam, omegar, theta)
+    return logl_desi(h0rd, omegam, omegar, theta) + logl_pantheon(omegam, omegar, theta)
 
 
 if __name__ == "__main__":
