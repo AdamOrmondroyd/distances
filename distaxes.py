@@ -21,7 +21,7 @@ def integrate_cpl(ai, ai1, wi, wi1, alower=None):
     return oneplusc * log(ai/alower) + m * (ai - alower)
 
 
-def prep(z, a, w):
+def prep(a, w):
     # compute all but the last part of ∫1+w/1+zdz, and preemtively cumsum
     # Never need the last section precomputed as would need z=infinity
     a = concatenate([ones((1,) + a.shape[1:], dtype=a.dtype), a])
