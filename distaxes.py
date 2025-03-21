@@ -36,20 +36,14 @@ def prep(z, a, w):
 
 def f_de(z, a, w, section):
     alower = 1/(1+z)
-    i = vmap(lambda a: searchsorted(-a, -alower, side='right')-1, 1, 1)(a)
+    i = searchsorted(-a, -alower, side='right')-1
+    ai = a[i]
+    ai1 = a[i+1]
+    wi = w[i]
+    wi1 = w[i+1]
+    section = section[i]
 
-    ai = vmap(lambda col, idx: col[idx], in_axes=(1, 1), out_axes=1)(a, i)
-    ai1 = vmap(lambda col, idx: col[idx+1], in_axes=(1, 1), out_axes=1)(a, i)
-    wi = vmap(lambda col, idx: col[idx], in_axes=(1, 1), out_axes=1)(w, i)
-    wi1 = vmap(lambda col, idx: col[idx+1], in_axes=(1, 1), out_axes=1)(w, i)
-    section = vmap(lambda col, idx: col[idx], in_axes=(1, 1), out_axes=1)(section, i)
-
-    # i = 2, 1000
-    # a = 10, 1000
-    # a[i] = 2, 1000, 1000 :(
-    # treemap?
-
-    return exp(3*(section + integrate_cpl(ai, ai1, wi, wi1, alower[:, None])))
+    return exp(3*(section + integrate_cpl(ai, ai1, wi, wi1, alower)))
 
 
 def h(z, omegam, omegar, f_de):
