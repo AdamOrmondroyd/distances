@@ -35,13 +35,23 @@ def prep(a, w):
 
 
 def f_de(z, a, w, section):
+    """
+    z = (nbao, ...)
+    a, w = (nfk, ...)
+    result (nbao, ...)
+    so nfk is "internal"
+    """
     alower = 1/(1+z)
-    i = searchsorted(-a, -alower, side='right')-1
-    ai = a[i]
-    ai1 = a[i+1]
-    wi = w[i]
-    wi1 = w[i+1]
-    section = section[i]
+    i = argmin(jnp.where(a[:, None] > alower, a[:, None], np.inf), axis=0)
+    # i should have shape (nbao, ...)
+    assert i.shape == z.shape
+    ai = take_along_axis(a, i, axis=0)
+    ai1 = take_along_axis(a, i+1, axis=0)
+    wi = take_along_axis(w, i, axis=0)
+    wi1 = take_along_axis(w, i+1, axis=0)
+    section = take_along_axis(section, i, axis=0)
+    # ai should have shape (nbao, ...)
+    assert ai.shape == z.shape
 
     return exp(3*(section + integrate_cpl(ai, ai1, wi, wi1, alower)))
 
