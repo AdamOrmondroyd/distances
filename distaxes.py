@@ -6,7 +6,6 @@ from jax.numpy import (
     argmin, take_along_axis
 )
 from scipy.constants import c
-from flexknot.utils import create_theta
 
 # change to double precision
 jax.config.update("jax_enable_x64", True)
