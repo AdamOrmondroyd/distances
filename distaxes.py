@@ -83,7 +83,7 @@ def dm_over_rs(z, a, w, section, h0rd, omegam, omegar, resolution=100):
     return c / h0rd * trapezoid(one_over_h, _z, axis=1)
 
 
-def dm_and_dh(z_dh, z_dm, h0rd, omagam, omegar, a, w):
+def dm_and_dh(z_dh, z_dm, h0rd, omegam, omegar, a, w):
     a, sections = prep(a, w)
     _dh = dh_over_rs(z_dh, a, w, sections, h0rd, omegam, omegar)
     _dm = dm_over_rs(z_dm, a, w, sections, h0rd, omegam, omegar)
