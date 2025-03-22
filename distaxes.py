@@ -2,9 +2,11 @@ import jax
 from jax import vmap
 from jax import numpy as jnp
 from jax.numpy import (
-    exp, sqrt, log, concatenate, zeros, ones, searchsorted, linspace, trapezoid
+    exp, sqrt, log, concatenate, zeros, ones, linspace, trapezoid,
+    argmin, take_along_axis
 )
 from scipy.constants import c
+from flexknot.utils import create_theta
 
 # change to double precision
 jax.config.update("jax_enable_x64", True)
@@ -25,16 +27,16 @@ def prep(a, w):
     # compute all but the last part of ∫1+w/1+zdz, and preemtively cumsum
     # Never need the last section precomputed as would need z=infinity
     a = concatenate([ones((1,) + a.shape[1:], dtype=a.dtype), a])
-    section = integrate_cpl(a[:-1], a[1:], w[:-2], w[1:-1])
+    sections = integrate_cpl(a[:-1], a[1:], w[:-2], w[1:-1])
     # helpful to have zero at the beginning to handle
     # being in the zeroth flexknot section
-    section = section.cumsum(axis=0)
-    section = concatenate([zeros((1,) + section.shape[1:]), section])
+    sections = sections.cumsum(axis=0)
+    sections = concatenate([zeros((1,) + sections.shape[1:]), sections])
     a = concatenate([a, zeros((1,) + a.shape[1:], dtype=a.dtype)])
-    return a, section
+    return a, sections
 
 
-def f_de(z, a, w, section):
+def f_de(z, a, w, sections):
     """
     z = (nbao, ...)
     a, w = (nfk, ...)
@@ -44,14 +46,12 @@ def f_de(z, a, w, section):
     alower = 1/(1+z)
     i = argmin(jnp.where(a[:, None] > alower, a[:, None], np.inf), axis=0)
     # i should have shape (nbao, ...)
-    assert i.shape == z.shape
     ai = take_along_axis(a, i, axis=0)
     ai1 = take_along_axis(a, i+1, axis=0)
     wi = take_along_axis(w, i, axis=0)
     wi1 = take_along_axis(w, i+1, axis=0)
-    section = take_along_axis(section, i, axis=0)
+    section = take_along_axis(sections, i, axis=0)
     # ai should have shape (nbao, ...)
-    assert ai.shape == z.shape
 
     return exp(3*(section + integrate_cpl(ai, ai1, wi, wi1, alower)))
 
@@ -67,26 +67,27 @@ def h(z, omegam, omegar, f_de):
     )
 
 
-def dh_over_rs(z, h0rd, h):
-    return c / h0rd / h
+def dh_over_rs(z, a, w, section, h0rd, omegam, omegar):
+    _f_de = f_de(z, a, w, sections)
+    _h = h(z, omegam, omegar, _f_de)
+    return c / h0rd / _h
 
 
-def dm_over_rs(z, a, w, section, h0rd, omegam, omegar, f_de, resolution=100):
-    _z = linspace(0, z, resolution)
-    print(f"{_z.shape=}")
-    _f_de = f_de(_z, a, w, section)
-    print(f"{_f_de.shape=}")
-    print(f"{omegam.shape=}")
-    one_over_h = 1/h(_z[:, None, ...], omegam[:, :, None, ...], omegar, _f_de)
-    print(f"{one_over_h.shape=}")
-    return c / h0rd * trapezoid(one_over_h, _z[:, None, ...])
+def dm_over_rs(z, a, w, section, h0rd, omegam, omegar, resolution=100):
+
+    # _z = (nbao, resolution, ...)
+    _z = linspace(0, z, resolution, axis=1)
+    # the new axis needs to sneak behind the nbao and nfk axes
+    _f_de = f_de(_z, a[:, None], w[:, None], sections[:, None])
+    one_over_h = 1/h(_z, omegam[None], omegar, _f_de)
+    return c / h0rd * trapezoid(one_over_h, _z, axis=1)
 
 
-
-def logl(h0rd, omegam, omegar, theta=jnp.array([-1])):
-    theta = jnp.array(theta)
-    ai = jnp.concatenate([[1], theta[2:0:-2], [0]])
-    wi = theta[::-2]
+def dm_and_dh(z_dh, z_dm, h0rd, omagam, omegar, a, w):
+    a, sections = prep(a, w)
+    _dh = dh_over_rs(z_dh, a, w, sections, h0rd, omegam, omegar)
+    _dm = dm_over_rs(z_dm, a, w, sections, h0rd, omegam, omegar)
+    return _dh, _dm
 
 
 if __name__ == "__main__":
