@@ -1,5 +1,4 @@
 import jax
-from jax import vmap
 from jax import numpy as jnp
 from jax.numpy import (
     exp, sqrt, log, concatenate, zeros, ones, linspace, trapezoid,
@@ -43,7 +42,7 @@ def f_de(z, a, w, sections):
     so nfk is "internal"
     """
     alower = 1/(1+z)
-    i = argmin(jnp.where(a[:, None] > alower, a[:, None], np.inf), axis=0)
+    i = argmin(jnp.where(a[:, None] > alower, a[:, None], jnp.inf), axis=0)
     # i should have shape (nbao, ...)
     ai = take_along_axis(a, i, axis=0)
     ai1 = take_along_axis(a, i+1, axis=0)
@@ -66,7 +65,8 @@ def h(z, omegam, omegar, f_de):
     )
 
 
-def dh_over_rs(z, a, w, section, h0rd, omegam, omegar):
+@jax.jit
+def dh_over_rs(z, a, w, sections, h0rd, omegam, omegar):
     _f_de = f_de(z, a, w, sections)
     _h = h(z, omegam, omegar, _f_de)
     return c / h0rd / _h
