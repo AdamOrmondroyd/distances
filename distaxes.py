@@ -72,72 +72,16 @@ def dh_over_rs(z, a, w, sections, h0rd, omegam, omegar):
     return c / h0rd / _h
 
 
-def dm_over_rs(z, a, w, section, h0rd, omegam, omegar, resolution=100):
+def dm_over_rs(z, a, w, sections, h0rd, omegam, omegar, resolution=1000):
 
     # _z = (nbao, resolution, ...)
-    _z = linspace(0, z, resolution, axis=1)
+    # should I sneak the additional axis behind all of them?
+    _z = linspace(0, z, resolution, axis=-1)
     # the new axis needs to sneak behind the nbao and nfk axes
-    _f_de = f_de(_z, a[:, None], w[:, None], sections[:, None])
-    one_over_h = 1/h(_z, omegam[None], omegar, _f_de)
-    return c / h0rd * trapezoid(one_over_h, _z, axis=1)
+    _f_de = f_de(_z, a[..., None], w[..., None], sections[..., None])
+    one_over_h = 1/h(_z, omegam[..., None], omegar, _f_de)
+    return c / h0rd * trapezoid(one_over_h, _z, axis=-1)
 
 
-def dm_and_dh(z_dh, z_dm, h0rd, omegam, omegar, a, w):
-    a, sections = prep(a, w)
-    _dh = dh_over_rs(z_dh, a, w, sections, h0rd, omegam, omegar)
-    _dm = dm_over_rs(z_dm, a, w, sections, h0rd, omegam, omegar)
-    return _dh, _dm
-
-
-if __name__ == "__main__":
-    import numpy as np
-    from distances import f_de as f_de_old, dh_over_rs as dh_over_rs_old, dm_over_rs as dm_over_rs_old
-    from flexknot.utils import create_theta
-    from flexknot.priors import Prior
-    from pypolychord.priors import UniformPrior
-
-    h0rdprior = UniformPrior(3650, 18250)
-    omprior = UniformPrior(0.01, 0.99)
-    fkprior = Prior(0, 1, -3, 0)
-    N = 5
-    ndims = 2*N
-    nsamples = 100
-
-    def prior(x):
-        return np.concatenate([h0rdprior(x[0:1]),  omprior(x[1:2]), fkprior(x[2:])])
-
-    theta = jnp.array([prior(np.random.rand(ndims)) for _ in range(nsamples)]).T
-    print(f"{theta.shape=}")
-    h0rd = theta[0:1]
-    omegam = theta[1:2]
-    theta = theta[2:]
-    a = theta[1:-1:2][::-1]
-    w = jnp.vstack([theta[0::2], theta[-1]])[::-1]
-    print(f"{a.shape=}")
-    print(f"{w.shape=}")
-
-    z = jnp.arange(0, 2, 0.01)
-
-    a, sections = prep(z, a, w)
-    print(f"{a=}")
-    print(f"{a.shape=}")
-    print(f"{sections=}")
-    print(f"{sections.shape=}")
-
-    new_f_de = f_de(z, a, w, sections)
-    new_h = h(z[:, None, ...], omegam, 8.24e-5, new_f_de)
-    print(f"{new_h}")
-    print(f"{h(z[:, None, ...], omegam, 8.24e-5, new_f_de)=}")
-    print(f"{new_f_de.shape=}")
-    new = dh_over_rs(z, h0rd, new_h)
-    old = np.array([[dh_over_rs_old(zi, h0rdi.squeeze(), omegami.squeeze(), 8.24e-5, theta_i) for zi in z] for h0rdi, omegami, theta_i in zip(h0rd.T, omegam.T, theta.T)])
-    print(f"{old.shape=}")
-    print(f"{new.shape=}")
-    print(f"{old=}")
-    print(f"{new=}")
-    assert np.allclose(old.T, new)
-
-    new_dm = dm_over_rs(z, a, w, sections, h0rd, omegam, 8.24e-5, f_de)
-    old_dm = np.array([[dm_over_rs_old(zi, h0rdi, omegami, 8.24e-5, theta_i) for zi in z] for h0rdi, omegami, theta_i in zip(h0rd.T, omegam.T, theta.T)])
-    print(f"{old_dm=}")
-    print(f"{new_dm=}")
+def dv_over_rs(z, *args, **kwargs):
+    return (z * dm_over_rs(z, *args, **kwargs) ** 2 * dh_over_rs(z, *args, **kwargs)) ** (1/3)

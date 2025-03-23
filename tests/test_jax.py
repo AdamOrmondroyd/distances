@@ -34,7 +34,7 @@ def test_dh():
                        distaxes.dh_over_rs(z, a, w, sections, h0rd, omegam, omegar))
     z = jnp.arange(0.01, 2, 0.01)
     assert np.allclose(distaxes.dh_over_rs(z, a, w, sections, h0rd, omegam, omegar),
-                      [distances.dh_over_rs(zi, h0rd, omegam, omegar, theta) for zi in z])
+                       [distances.dh_over_rs(zi, h0rd, omegam, omegar, theta) for zi in z])
 
 
 def test_dh_vectorized():
@@ -59,3 +59,47 @@ def test_dh_vectorized():
                         for h0rdi, omegami, thetai in zip(h0rd, omegam, theta.T)]
                         for zi in z],
                        distaxes.dh_over_rs(z[..., None], a, w, sections, h0rd, omegam, omegar))
+
+
+def test_dm():
+    N = 5
+    ndims = 2*N
+    x = jnp.array(np.random.rand(ndims))
+    h0rd = h0rdprior(x[0])
+    omegam = omprior(x[1])
+    a = aprior(x[2:N])
+    w = wprior(x[N:])
+    theta = create_theta(a[::-1], w[::-1])
+    z = jnp.array(0.510)
+    a, sections = distaxes.prep(a, w)
+
+    assert np.allclose(distances.dm_over_rs(z, h0rd, omegam, omegar, theta),
+                       distaxes.dm_over_rs(z, a, w, sections, h0rd, omegam, omegar))
+    z = jnp.arange(0.01, 2, 0.01)
+    assert np.allclose(distaxes.dm_over_rs(z, a, w, sections, h0rd, omegam, omegar, resolution=1000),
+                      [distances.dm_over_rs(zi, h0rd, omegam, omegar, theta) for zi in z])
+
+
+def test_dm_vectorized():
+    N = 5
+    ndims = 2*N
+    nsamples = 100
+    x = jnp.array(np.random.rand(ndims, nsamples))
+    h0rd = h0rdprior(x[0])
+    omegam = omprior(x[1])
+    a = jnp.array([aprior(xi) for xi in x[2:N].T]).T
+    w = wprior(x[N:])
+    theta = np.array([create_theta(ai[::-1], wi[::-1]) for ai, wi in zip(a.T, w.T)]).T
+    z = jnp.array(0.510)
+    a, sections = distaxes.prep(a, w)
+    distaxes.dm_over_rs(z, a, w, sections, h0rd, omegam, omegar, resolution=1000)
+
+    assert np.allclose([distances.dm_over_rs(z, h0rdi, omegami, omegar, thetai)
+                        for h0rdi, omegami, thetai in zip(h0rd, omegam, theta.T)],
+                       distaxes.dm_over_rs(z, a, w, sections, h0rd, omegam, omegar, resolution=1000))
+
+    z = jnp.arange(0.01, 2, 0.01)
+    assert np.allclose([[distances.dm_over_rs(zi, h0rdi, omegami, omegar, thetai)
+                         for h0rdi, omegami, thetai in zip(h0rd, omegam, theta.T)]
+                        for zi in z],
+                       distaxes.dm_over_rs(z[..., None], a, w, sections, h0rd, omegam, omegar, resolution=1000))
