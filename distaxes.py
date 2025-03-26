@@ -76,6 +76,9 @@ def dm_over_rs(z, a, w, sections, h0rd, omegam, omegar, resolution=1000):
 
     # _z = (nbao, resolution, ...)
     # should I sneak the additional axis behind all of them?
+    # NOTE: I think -1 or 0 doesn't matter, so long as an axis is added
+    # to a, w etc to match the extra axis in _z,
+    # and trapezoid is called on the same axis
     _z = linspace(0, z, resolution, axis=-1)
     # the new axis needs to sneak behind the nbao and nfk axes
     _f_de = f_de(_z, a[..., None], w[..., None], sections[..., None])
