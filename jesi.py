@@ -8,9 +8,8 @@ import distaxes
 from flexknot.utils import get_x_nodes_from_theta, get_y_nodes_from_theta
 import jax
 
-data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
-                header=None, index_col=None, sep=r"\s+", comment="#")
-cov = np.loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
+data = read_csv("desi3/desi3_mean.txt", header=None, index_col=None, sep=r"\s+", comment="#")
+cov = np.loadtxt("desi3/desi3_cov.txt")
 
 zs = jnp.array(data.iloc[:, 0].to_numpy())
 mean = data.iloc[:, 1].to_numpy()

@@ -57,9 +57,9 @@ def wrapped_stepper(x, n, t):
     return y
 
 
-nprior = 10_000
-nlive = 1000
-n_delete = nlive//2
+nlive = 5000
+nprior = 10 * nlive
+n_delete = nlive // 2
 rng_key, init_key = jax.random.split(rng_key, 2)
 
 
