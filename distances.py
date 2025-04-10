@@ -15,6 +15,8 @@ def f_de(z, theta):
     a = 1 / (1 + z)
     ai = get_x_nodes_from_theta(theta, False)[::-1]
     wi = get_y_nodes_from_theta(theta, False)[::-1]
+    if len(ai) == 0 and len(wi) == 1:
+        wi = concatenate([wi, wi])
     # NOTE: "left" means the lower integration limit. a0 = 1
     ai = concatenate([[1], ai, [0]])
     left_a = ai[ai > a]  # aka ai
