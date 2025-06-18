@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 from matplotlib import gridspec
 import smplotlib
 from fgivenx import plot_lines, plot_dkl
-from fgivenx.drivers import compute_dkl
 from anesthetic import read_chains, make_2d_axes
 from anesthetic.samples import merge_samples_weighted
 from pypolychord.output import PolyChordOutput
@@ -37,7 +36,8 @@ def collect_chains(name, n, single=False, cobaya=False):
     return idx, ns, nss, pcs, prior
 
 
-def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, cols=None):
+def plot(name, n, single, cobaya, fig=None, ax=None,
+         color='C1', label=None, cols=None, tension=False):
     params = flexknotparamnames(n, tex=False)
 
     idx, ns, nss, pcs, prior = collect_chains(name, n, single, cobaya)
@@ -61,25 +61,30 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
         gs = gridspec.GridSpec(2, 2)
 
         # add 2x1 gridspec to top left
-        top_left = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 0],
+        top_left = gridspec.GridSpecFromSubplotSpec(2, 1,
+                                                    subplot_spec=gs[0, 0],
                                                     hspace=0.1,
                                                     height_ratios=[1, 0.5])
-        # top_right = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[0, 1],
-                                                     # hspace=0.1,
-                                                     # height_ratios=[3, 2])
-        bottom_right = gridspec.GridSpecFromSubplotSpec(2, 1, subplot_spec=gs[1, 1],
+        top_right = gridspec.GridSpecFromSubplotSpec(2, 1,
+                                                     subplot_spec=gs[0, 1],
+                                                     hspace=0.1,
+                                                     height_ratios=[3, 2])
+        bottom_right = gridspec.GridSpecFromSubplotSpec(2, 1,
+                                                        subplot_spec=gs[1, 1],
                                                         hspace=0.1,
                                                         height_ratios=[1, 0.5])
         ax_dkl = fig.add_subplot(top_left[1])
-        # ax_logR = fig.add_subplot(top_right[1])
+        ax_logR = fig.add_subplot(top_right[1])
         ax_zkl = fig.add_subplot(bottom_right[1])
         ax = [
             [
                 fig.add_subplot(top_left[0], sharex=ax_dkl),
                 ax_dkl,
             ],
-            # fig.add_subplot(top_right[0], sharex=ax_logR),
-            fig.add_subplot(gs[0, 1]),
+            [
+                fig.add_subplot(top_right[0], sharex=ax_logR),
+                ax_logR,
+            ] if tension else [fig.add_subplot(gs[0, 1])],
             make_2d_axes(cols, fig=fig, subplot_spec=gs[1, 0])[1]
             if len(cols) > 1 else
             fig.add_subplot(gs[1, 0]),
@@ -89,7 +94,8 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
             ],
         ]
         plt.setp(ax[0][0].get_xticklabels(), visible=False)
-        # plt.setp(ax[1].get_xticklabels(), visible=False)
+        if tension:
+            plt.setp(ax[1][0].get_xticklabels(), visible=False)
         plt.setp(ax[3][0].get_xticklabels(), visible=False)
 
     fk = FlexKnot(0, 1)
@@ -100,8 +106,6 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
 
     x = np.linspace(0, 1, 100)
     print(f"{ns[params]=}")
-    # plot_lines(f, x, prior[params], weights=prior.get_weights(),
-               # ax=ax[0], color=prior_color)
     fsamps = plot_lines(f, x, ns_comp[params], weights=ns_comp.get_weights(),
                         ax=ax[0][0], color=color)
     mean = np.mean(fsamps, axis=-1)
@@ -110,17 +114,22 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
     dkl = plot_dkl(f, x, ns_comp[params], prior_samples=prior_comp[params],
                    weights=ns_comp.get_weights(), ax=ax[0][1], color=color)
     ax[0][0].set_xlabel("$a$", fontsize='x-large')
-    ax[0][0].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$", fontsize='x-large')
+    ax[0][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
+                        fontsize='x-large')
     alpha_plot(x, mean, sigma, ax[0][0], color, dkl)
     ax[0][0].set_ylabel("$w(a)$", fontsize='x-large')
     ax[0][0].set(xlim=(0, 1), ylim=(-3, 0))
 
     if len(cols) > 1:
         _axes = ns.plot_2d(ax[2], label="posterior", color=color,
-                           kinds=dict(lower="kde_2d", diagonal="hist_1d", upper="scatter_2d"),
+                           kinds=dict(
+                               lower="kde_2d",
+                               diagonal="hist_1d",
+                               upper="scatter_2d"),
                            upper_kwargs=dict(ncompress=1000, alpha=0.1),
                            diagonal_kwargs=dict(alpha=0.5),
-                           lower_kwargs=dict(alpha=0.5, levels=[0.99, 0.95, 0.68],
+                           lower_kwargs=dict(alpha=0.5,
+                                             levels=[0.99, 0.95, 0.68],
                                              nplot_2d=10_000))
         _axes.tick_params(labelsize='large')
         for ii in range(len(_axes)):
@@ -128,15 +137,16 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
                 _axes.iloc[ii, i].xaxis.get_offset_text().set_fontsize("large")
                 _axes.iloc[ii, i].yaxis.get_offset_text().set_fontsize("large")
     else:
-        ns[cols[0]].plot.hist(ax=ax[2], alpha=0.5, color=color, bins=40, density=True)
+        ns[cols[0]].plot.hist(ax=ax[2], alpha=0.5, color=color,
+                              bins=40, density=True)
         ax[2].set_xlabel(r"$\Omega_{\mathrm{m}}$")
         ax[2].tick_params()
     for _ax in fig.axes:
         _ax.tick_params(labelsize='large')
 
     if not single:
-        ax[1].set_xlabel("$n$", fontsize='x-large')
-        ax[1].set_ylabel(r"$\log{Z_n}$", fontsize='x-large')
+        ax[1][0].set_xlabel("$n$", fontsize='x-large')
+        ax[1][0].set_ylabel(r"$\log{Z_n}$", fontsize='x-large')
 
         pclogZs = []
         pclogZerrs = []
@@ -151,43 +161,53 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
                 lcdm = PolyChordOutput("chains", f"{name}/{name}_lcdm")
             pclogZs -= lcdm.logZ
             pclogZerrs = np.sqrt(pclogZerrs**2 + lcdm.logZerr**2)
-            ax[1].set_ylabel(r"$\log Z_n-\log Z_{\Lambda\text{CDM}}$", fontsize='x-large')
+            ax[1][0].set_ylabel(r"$\log Z_n-\log Z_{\Lambda\text{CDM}}$",
+                             fontsize='x-large')
             logR = logsumexp(pclogZs) - np.log(n)
             partials = np.e**(pclogZs - logsumexp(pclogZs))
-            logRerr = (np.sum((partials * pclogZs)**2) + lcdm.logZerr**2)**(0.5)
-            ax[1].set_title("Bayes factors",
-                            # f"\n$\\log Z_\\mathrm{{flexknot}} - \\log Z_{{\\Lambda\\text{{CDM}}}} = {logR:.2f} \\pm {logRerr:.2f}$",
-                            fontsize='x-large')
+            logRerr = (np.sum((partials * pclogZs)**2)
+                       + lcdm.logZerr**2)**(0.5)
+            ax[1][0].set_title("Bayes factors"
+                               f"\n$\\log Z_\\mathrm{{flexknot}}"
+                               f" - \\log Z_{{\\Lambda\\text{{CDM}}}}"
+                               f" = {logR:.2f} \\pm {logRerr:.2f}$"
+                               if "_" not in name else "Bayes factors",
+                               fontsize='x-large')
 
-            ax[1].set_xticks(idx[4::5])
-            ax[1].set_xticks(idx, minor=True)
+            ax[1][0].set_xticks(idx[4::5])
+            ax[1][0].set_xticks(idx, minor=True)
         except FileNotFoundError:
             print("LCDM file not found :(")
-        ax[1].errorbar(idx, pclogZs, yerr=pclogZerrs,
-                       label=f"{label}\n($\\log Z = {logR:.2f} \\pm {logRerr:.2f}$)",
-                       marker='+', linestyle='None',
-                       color=color)
-        # # plot tensions
-        # logRi = np.load(f"tensions/{name}_logRi.npy")
-        # nsa = read_chains(f"chains/{name[:7]}/{name[:7]}_lcdm")
-        # nsb = read_chains(f"chains/{name[8:]}/{name[8:]}_lcdm")
-        # nsab = read_chains(f"chains/{name}/{name}_lcdm")
-        #
-        # logRlcdm = nsab.stats(nsamples=1000).logZ - nsa.stats(nsamples=1000).logZ - nsb.stats(nsamples=1000).logZ
-        # ax[5].errorbar(idx, logRi.mean(axis=1), yerr=logRi.std(axis=1),
-        #                linestyle='None', marker='_',
-        #                color=color)
-        # ax[5].axhline(logRlcdm.mean(), color=color, linestyle='--', label='LCDM')
-        # ax[5].text(n-2, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
-        # ax[5].set_xlabel("$n$", fontsize='x-large')
-        # ax[5].set_ylabel(r"Tension $\log R_n$", fontsize='x-large')
-        # fig.align_ylabels([ax[1], ax[5]])
+        ax[1][0].errorbar(idx, pclogZs, yerr=pclogZerrs,
+                          label=f"{label}\n($\\log Z = {logR:.2f} \\pm {logRerr:.2f}$)",
+                          marker='+', linestyle='None',
+                          color=color)
+        # plot tensions
+        if tension:
+            a, b = name.split('_')
+            logRi = np.load(f"tensions/{name}_logRi.npy")
+            nsa = read_chains(f"chains/{a}/{a}_lcdm")
+            nsb = read_chains(f"chains/{b}/{b}_lcdm")
+            nsab = read_chains(f"chains/{name}/{name}_lcdm")
+
+            logRlcdm = nsab.stats(nsamples=1000).logZ - (
+                nsa.stats(nsamples=1000).logZ + nsb.stats(nsamples=1000).logZ)
+
+            ax[1][1].errorbar(idx, logRi.mean(axis=1), yerr=logRi.std(axis=1),
+                              linestyle='None', marker='_',
+                              color=color)
+            ax[1][1].axhline(logRlcdm.mean(), color=color, linestyle='--', label='LCDM')
+            ax[1][1].text(n-2, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
+            ax[1][1].set_xlabel("$n$", fontsize='x-large')
+            ax[1][1].set_ylabel(r"Tension $\log R_n$", fontsize='x-large')
+            fig.align_ylabels(ax[1])
 
         if label is not None:
-            ax[1].legend(fontsize='medium', frameon=True, framealpha=0.5)
+            ax[1][0].legend(fontsize='medium', frameon=True, framealpha=0.5)
     else:
         from PIL import Image
-        ax[1].imshow(np.asarray(Image.open("why_is_it_empty.png")), origin='lower', extent=(0, 1, 0, 1))
+        ax[1].imshow(np.asarray(Image.open("why_is_it_empty.png")),
+                     origin='lower', extent=(0, 1, 0, 1))
 
     def fz(z, theta):
         theta = theta[~np.isnan(theta)]
@@ -196,9 +216,7 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
     z = np.logspace(-3, np.log10(2.5), 100)
     ax[3][1].set_xlabel("$z$", fontsize='x-large')
     ax[3][0].set_ylabel("$w(z)$", fontsize='x-large')
-    ax[3][0].set(xlim=(min(z), max(z)), ylim=(-3, 0),
-              xscale='log',
-              )
+    ax[3][0].set(xlim=(min(z), max(z)), ylim=(-3, 0), xscale='log')
 
     fsamps = plot_lines(fz, z, ns_comp[params], weights=ns_comp.get_weights(),
                         ax=ax[3][0], color=color)
@@ -208,11 +226,14 @@ def plot(name, n, single, cobaya, fig=None, ax=None, color='C1', label=None, col
                      weights=ns_comp.get_weights(), ax=ax[3][1], color=color)
     alpha_plot_log(z, mean, sigma, ax[3][0], color, z_dkl)
 
-    ax[3][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$", fontsize='x-large')
+    ax[3][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
+                        fontsize='x-large')
     ax[3][0].axhline(-1, color='k', linestyle='--')
 
     ax[0][0].set_title(r"$w(a)$ reconstruction", fontsize='x-large')
     ax[3][0].set_title(r"$w(z)$ reconstruction", fontsize='x-large')
+    fig.align_ylabels(ax[0])
+    fig.align_ylabels(ax[3])
 
     return fig, ax
 
@@ -242,13 +263,13 @@ if __name__ == "__main__":
         single = False
         cobaya = False
 
-    fig, ax = plot(name, n, single, cobaya, color=colors.get(name, colors['desidr1']))
+    # fig, ax = plot(name, n, single, cobaya, color=colors.get(name, colors['desidr1']))
     # fig, ax = plot("desidr1", n, single, cobaya, color='k', label="DESI DR1")
     # fig, ax = plot("desidr2", n, single, cobaya, fig, ax, color=colors['desidr2'], label="DESI DR2")
     # fig, ax = plot("desidr1_pantheonplus", n, single, cobaya, color=colors['desidr1_pantheonplus'], label="DESI DR1 + Pantheon+")
-    # fig, ax = plot("desidr2_pantheonplus", n, single, cobaya, color=colors['desidr2_pantheonplus'], label="DESI DR2 + Pantheon+")
+    fig, ax = plot("desidr2_pantheonplus", n, single, cobaya, tension=True, color=colors['desidr2_pantheonplus'], label="DESI DR2 + Pantheon+")
     # fig, ax = plot("desidr1_des5y", n, single, cobaya, color=colors['desidr1_des5y'], label="DESI DR1 + DES5Y")
-    # fig, ax = plot("desidr2_des5y", n, single, cobaya, fig, ax, color=colors['desidr2_des5y'], label="DESI DR2 + DES5Y")
+    fig, ax = plot("desidr2_des5y", n, single, cobaya, fig, ax, tension=True, color=colors['desidr2_des5y'], label="DESI DR2 + DES5Y")
     # cols = ["Omegam", "H0rd", "H0"]
     # #1f77b4
     # fig, ax = plot("desi", n, single, False, color='#58acbc', label="DESI", cols=cols)
