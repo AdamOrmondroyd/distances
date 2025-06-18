@@ -74,7 +74,7 @@ def corner_plot(ns, cols, ax, color='C0'):
         ax.tick_params()
 
 
-def bayes_and_tension(name, n, idx, pcs, ax, label=None, color='C0',
+def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
                       tension=False, cobaya=False):
     ax[0].set_xlabel("$n$", fontsize='x-large')
     ax[0].set_ylabel(r"$\log{Z_n}$", fontsize='x-large')
@@ -217,7 +217,7 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
         _ax.tick_params(labelsize='large')
 
     if not single:
-        bayes_and_tension(name, n, idx, pcs, ax[1], label=label,
+        bayes_and_tension(name, n, idx, pcs, fig, ax[1], label=label,
                           color=color, tension=tension, cobaya=cobaya)
 
         if label is not None:
