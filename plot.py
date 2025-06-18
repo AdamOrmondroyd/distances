@@ -11,7 +11,7 @@ from anesthetic.samples import merge_samples_weighted
 from pypolychord.output import PolyChordOutput
 from common import flexknotparamnames
 from flexknot import FlexKnot
-from alpha_plot import alpha_plot, alpha_plot_log
+from alpha_plot import alpha_plot
 
 
 def collect_chains(name, n, single=False, cobaya=False):
