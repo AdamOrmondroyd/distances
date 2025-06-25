@@ -44,10 +44,7 @@ def plot_samples_dkl(f, x, ns, prior, ax, color='C0', log=False):
 
     dkl = plot_dkl(f, x, ns, prior_samples=prior,
                    weights=ns.get_weights(), ax=ax[1], color=color)
-    if log:
-        alpha_plot_log(x, mean, sigma, ax[0], color, dkl)
-    else:
-        alpha_plot(x, mean, sigma, ax[0], color, dkl)
+    alpha_plot(x, mean, sigma, ax[0], color, dkl)
 
 
 def corner_plot(ns, cols, ax, color='C0'):
