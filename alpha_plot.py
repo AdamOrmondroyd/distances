@@ -7,7 +7,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.image import NonUniformImage
 
 
-def alpha_plot(x, mean, sigma, ax, color, dkl=None, linecolor='C0'):
+def alpha_plot(x, mean, sigma, ax, color, dkl=None, linecolor='C0',
+               max_alpha=1.0, **kwargs):
     lower = mean - sigma
     upper = mean + sigma
 
@@ -18,13 +19,13 @@ def alpha_plot(x, mean, sigma, ax, color, dkl=None, linecolor='C0'):
         segments = np.concatenate([points[:-1], points[1:]], axis=1)
 
         linecmap = LinearSegmentedColormap.from_list(
-            None, [(0, 0, 0, 0), mcolors.to_rgba(linecolor)], N=256)
+            None, [mcolors.to_rgb(linecolor) + (0,), mcolors.to_rgba(linecolor)], N=256)
         cmap = LinearSegmentedColormap.from_list(
             None, [mcolors.to_rgb(color) + (0,), mcolors.to_rgba(color)], N=256)
 
         lc = LineCollection(segments, array=alpha,
                             cmap=linecmap, norm=plt.Normalize(0, 1),
-                            lw=1.5,
+                            lw=2,
                             )
 
         # top
@@ -42,6 +43,7 @@ def alpha_plot(x, mean, sigma, ax, color, dkl=None, linecolor='C0'):
                              cmap=cmap, norm=plt.Normalize(0, 1),
                              lw=1.5)
 
+        alpha *= max_alpha
         # build the "strip" of alphas – 2 rows so we can fill between
         # lower & upper
         Z = np.vstack([alpha, alpha])    # shape (2, N)
@@ -60,6 +62,7 @@ def alpha_plot(x, mean, sigma, ax, color, dkl=None, linecolor='C0'):
         im.set_data(x, [lower.min(), upper.max()], Z)
         im.set_extent((x.min(), x.max(),
                        lower.min(), upper.max()))
+        im.set_clip_path(ax.patch)
         ax.add_image(im)
 
         # now clip exactly as before
