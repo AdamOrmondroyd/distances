@@ -38,8 +38,8 @@ class IaLogL:
         return 5 * log10(
             h0_dl_over_c(self.zhd, self.zhel, omegam, omegar, theta)) - self.mb
 
-    def __call__(self, omegam, omegar, theta=array([-1])):
-        y = self._y(omegam, omegar, theta)
+    def __call__(self, *args, **kwargs):
+        y = self._y(*args, **kwargs)
         capital_y = float((self.onesigma_times_5_over_log10 @ y).squeeze())
         return (
             - float(y.T @ self.invcov_tilde @ y / 2)
