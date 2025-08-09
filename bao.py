@@ -38,9 +38,11 @@ def dvplot(ax, lcdm=None, grey={}):
     d0 = d0.mean(axis=0)
     if lcdm is not None:
         d0 -= lcdm(1/(1+zv))
+        ax.set(xlabel=r"$a$", ylabel=r"$D_\text{V}/(r_\text{d}z^{2/3}) - (D_\text{V}/(r_\text{d}z^{2/3}))_{\Lambda\mathrm{CDM}}$")
+    else:
+        ax.set(xlabel=r"$a$", ylabel=r"$D_\text{V}/(r_\text{d}z^{2/3})$")
     for i, (zi, d, derr, label, color) in enumerate(zip(zv, d0, d0err, labelv, colorv)):
         ax.errorbar(1/(1+zi), d, yerr=derr, marker="+", color=color, label=label, alpha=0.25 if i in grey else 1)
-    ax.set(xlabel=r"$a$", ylabel=r"$D_\text{V}/(r_\text{d}z^{2/3})$")
     return ax
 
 
