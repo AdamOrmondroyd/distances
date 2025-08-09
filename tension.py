@@ -8,17 +8,18 @@ from tqdm import tqdm
 
 likelihoods = sys.argv[2:]
 
+# NOTE: use i20 to trigger single mode twenty
 try:
-    adaptive = True
+    single = False
     n = int(sys.argv[1])
 except ValueError:
-    adaptive = False
+    single = True
     n = int(sys.argv[1][1:])
 
 
 def read_chainss(name, n):
     return [
-        read_chains(f"chains/{name}_{i}")
+        read_chains(f"chains/{name}/{name}_{i}")
         for i in tqdm(range(1, n+1))
     ]
 
@@ -48,14 +49,16 @@ logZs = []
 logZH1s = []
 logRs = []
 logSs = []
-nssH0 = read_chainss("".join(likelihoods), n)
+nssH0 = read_chainss("_".join(likelihoods), n)
 nssH1s = [read_chainss(likelihood, n) for likelihood in likelihoods]
 
 for i in range(1, n+1):
     print(f"{i=}")
     logZH0 = logZ(nssH0[:i], i)
+    # logZH0 = logZ(nssH0[i-1:i], 1) if single else logZ(nssH0[:i], i)
     logZH1 = np.sum(
         [logZ(nssH1[:i], i) for nssH1 in nssH1s],
+        # [logZ(nssH1[i-1:i], 1) for nssH1 in nssH1s] if single else [logZ(nssH1[:i], i) for nssH1 in nssH1s],
         axis=0,
     )
     logZs.append(logZH0)
@@ -67,8 +70,10 @@ for i in range(1, n+1):
     logRs.append(logR)
 
     logLPH0 = logLP(nssH0[:i], i)
+    # logLPH0 = logLP(nssH0[i-1:i], 1) if single else logLP(nssH0[:i], i)
     logLPH1 = np.sum(
         [logLP(nssH1[:i], i) for nssH1 in nssH1s],
+        # [logLP(nssH1[i-1:i], 1) for nssH1 in nssH1s] if single else [logLP(nssH1[:i], i) for nssH1 in nssH1s],
         axis=0,
     )
     print(f"{logLPH0.mean()}±{logLPH0.std()}")
@@ -77,7 +82,11 @@ for i in range(1, n+1):
     print(f"logS={logS.mean()}±{logS.std()}")
     logSs.append(logS)
 
-np.save(f"{''.join(likelihoods)}_logZ.npy", logZs)
-np.save(f"{''.join(likelihoods)}_logZH1.npy", logZH1s)
-np.save(f"{''.join(likelihoods)}_logR.npy", logRs)
-np.save(f"{''.join(likelihoods)}_logS.npy", logSs)
+np.save(f"{'_'.join(likelihoods)}_logZ.npy", logZs)
+np.save(f"{'_'.join(likelihoods)}_logZH1.npy", logZH1s)
+np.save(f"{'_'.join(likelihoods)}_logR.npy", logRs)
+np.save(f"{'_'.join(likelihoods)}_logS.npy", logSs)
+# np.save(f"{'_'.join(likelihoods)}_logZ{'i' if single else ''}.npy", logZs)
+# np.save(f"{'_'.join(likelihoods)}_logZH1{'i' if single else ''}.npy", logZH1s)
+# np.save(f"{'_'.join(likelihoods)}_logR{'i' if single else ''}.npy", logRs)
+# np.save(f"{'_'.join(likelihoods)}_logS{'i' if single else ''}.npy", logSs)
