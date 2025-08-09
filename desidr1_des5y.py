@@ -1,0 +1,26 @@
+import sys
+from common import run
+from pypolychord.priors import GaussianPrior, UniformPrior
+from desi import logl_desi
+from des5y import logl_des5y
+
+
+omegar = 8.24e-5
+
+
+def likelihood(theta):
+    h0rd, omegam, *theta = theta
+    return logl_desi(h0rd, omegam, omegar, theta) + logl_des5y(omegam, omegar, theta)
+
+
+if __name__ == "__main__":
+    ns = run(
+        likelihood,
+        sys.argv[1],
+        [UniformPrior(3650, 18250),
+         UniformPrior(0.01, 0.99)],
+        "desi_des5y",
+        [(r"H0rd", r"H_0r_\mathrm{d}"),
+         (r"Omegam", r"\Omega_\mathrm{m}")],
+        True,
+    )
