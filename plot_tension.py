@@ -8,8 +8,8 @@ from pathlib import Path
 
 def tensionplot(likelihoods, n, ax, color, label):
 
-    lcdm_h0 = read_chains(f"chains/{''.join(likelihoods)}_lcdm")
-    lcdm_h1s = [read_chains(f"chains/{likelihood}_lcdm") for likelihood in likelihoods]
+    lcdm_h0 = read_chains(f"chains/{'_'.join(likelihoods)}/{'_'.join(likelihoods)}_lcdm")
+    lcdm_h1s = [read_chains(f"chains/{likelihood}/{likelihood}_lcdm") for likelihood in likelihoods]
 
     logZH0 = lcdm_h0.logZ(nsamples=1000)
     logZH1 = np.sum(
@@ -18,9 +18,9 @@ def tensionplot(likelihoods, n, ax, color, label):
     )
     logR = logZH0 - logZH1
     logRi = np.concatenate([logR.to_numpy()[None, ...],
-                            np.load(f"{''.join(likelihoods)}_logRi.npy")])
+                            np.load(f"{'_'.join(likelihoods)}_logRi.npy")])
     logR = np.concatenate([logR.to_numpy()[None, ...],
-                           np.load(f"{''.join(likelihoods)}_logR.npy")])
+                           np.load(f"{'_'.join(likelihoods)}_logR.npy")])
 
     logLPH0 = lcdm_h0.logL_P(nsamples=1000)
     logLPH1 = np.sum(
@@ -28,39 +28,40 @@ def tensionplot(likelihoods, n, ax, color, label):
         axis=0
     )
     logZi = np.concatenate([logZH0.to_numpy()[None, ...],
-                            np.load(f"{''.join(likelihoods)}_logZi.npy")])
+                            np.load(f"{'_'.join(likelihoods)}_logZi.npy")])
     logZi -= logZH0.to_numpy()[None, :]
     logZ = np.concatenate([logZH0.to_numpy()[None, ...],
-                           np.load(f"{''.join(likelihoods)}_logZ.npy")])
+                           np.load(f"{'_'.join(likelihoods)}_logZ.npy")])
     logZ -= logZH0.to_numpy()[None, :]
     logZH1i = np.concatenate([logZH1[None, ...],
-                              np.load(f"{''.join(likelihoods)}_logZH1i.npy")])
+                              np.load(f"{'_'.join(likelihoods)}_logZH1i.npy")])
     logZH1i -= logZH0.to_numpy()[None, :]
     logZH1 = np.concatenate([logZH1[None, ...],
-                             np.load(f"{''.join(likelihoods)}_logZH1.npy")])
+                             np.load(f"{'_'.join(likelihoods)}_logZH1.npy")])
     logZH1 -= logZH0.to_numpy()[None, :]
 
     logS = logLPH0 - logLPH1
     logSi = np.concatenate([logS.to_numpy()[None, ...],
-                            np.load(f"{''.join(likelihoods)}_logSi.npy")])
+                            np.load(f"{'_'.join(likelihoods)}_logSi.npy")])
     logS = np.concatenate([logS.to_numpy()[None, ...],
-                           np.load(f"{''.join(likelihoods)}_logS.npy")])
+                           np.load(f"{'_'.join(likelihoods)}_logS.npy")])
 
 
-    ax.errorbar(np.arange(len(logRi[1:])), logRi[1:].mean(axis=-1),
+    ax.errorbar(np.arange(len(logRi[1:]))+1, logRi[1:].mean(axis=-1),
                 yerr=logRi[1:].std(axis=-1),
                 linestyle='None', marker='_',
                 color=color, label=label)
 
     ax.set(xlabel="$n$", ylabel=r'$\log R$')
     idx = np.arange(len(logZ[1:]))+1
-    ax.set_xticks(idx[::5])
+    print(idx)
+    ax.set_xticks(idx[4::5])
     # ax.set_xticklabels([r"$\Lambda$CDM"] + list(idx[::5][1:]))
-    ax.set_xticklabels(list(idx[::5][1:]))
+    # ax.set_xticklabels(list(idx[::5][1:]))
     ax.set_xticks(idx, minor=True)
     logRlcdm = logR[0]
-    ax[1].axhline(logRlcdm.mean(), color=color, linestyle='--', label='LCDM')
-    ax[1].text(n-2, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
+    ax.axhline(logRlcdm.mean(), color=color, linestyle='--')
+    ax.text(n-2, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
 
 
 
@@ -81,10 +82,10 @@ if __name__ == "__main__":
     newiacolor = '#ff964f'
     purple = '#7B0043'
     newdescolor = '#caa0ff'
-    tensionplot(["desi", "ia_h0"], n, ax[0], garter_blue, 'DESI DR1 vs Pantheon+')
-    tensionplot(["desi3", "ia_h0"], n, ax[0], newiacolor, "DESI DR2 vs Pantheon+")
-    tensionplot(["desi", "des5y"], n, ax[1], purple, 'DESI DR1 vs DES5Y')
-    tensionplot(["desi3", "des5y"], n, ax[1], newdescolor, 'DESI DR2 vs DES5Y')
+    tensionplot(["desidr1", "pantheonplus"], n, ax[0], garter_blue, 'DESI DR1 vs Pantheon+')
+    tensionplot(["desidr2", "pantheonplus"], n, ax[0], newiacolor, "DESI DR2 vs Pantheon+")
+    tensionplot(["desidr1", "des5y"], n, ax[1], purple, 'DESI DR1 vs DES5Y')
+    tensionplot(["desidr2", "des5y"], n, ax[1], newdescolor, 'DESI DR2 vs DES5Y')
     ax[0].set(title="DESI vs Pantheon+")
     ax[1].set(title="DESI vs DES5Y")
     for _ax in ax:
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     ax[1].tick_params(labelleft=True)
     fig.tight_layout()
 
-    (Path("plots") / ''.join(likelihoods)).mkdir(parents=True, exist_ok=True)
-    fig.savefig(f"plots/{''.join(likelihoods)}/{''.join(likelihoods)}_tension_i.pdf",
+    (Path("plots") / '_'.join(likelihoods)).mkdir(parents=True, exist_ok=True)
+    fig.savefig(f"plots/{'_'.join(likelihoods)}/{'_'.join(likelihoods)}_tension_i.pdf",
                 bbox_inches='tight')
     plt.show()

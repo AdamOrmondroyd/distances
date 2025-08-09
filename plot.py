@@ -14,7 +14,7 @@ from flexknot import FlexKnot
 from alpha_plot import alpha_plot
 
 
-def collect_chains(name, n, single=False, cobaya=False, dodgy_wcdm=False, zenodo=False):
+def collect_chains(name, n, single=False, cobaya=False, dodgy_wcdm=False, zenodo=False, suffix=""):
     """Returns idx, ns, nss, pcs, prior"""
     if single:
         idx = [n]
@@ -27,8 +27,8 @@ def collect_chains(name, n, single=False, cobaya=False, dodgy_wcdm=False, zenodo
         nss = [read_chains(f"chains/{name}_{i}" if i != 1 else f"chains/{name}_test_{i}") for i in idx]
         pcs = [PolyChordOutput("chains", f"{name}_{i}" if i != 1 else f"{name}_test_{i}")for i in idx]
     elif zenodo:
-        nss = [read_chains(f"chains/{name}/{name}_{i}") for i in idx]
-        pcs = [PolyChordOutput("chains", f"{name}/{name}_{i}") for i in idx]
+        nss = [read_chains(f"chains/{name}/{name}{suffix}_{i}") for i in idx]
+        pcs = [PolyChordOutput("chains", f"{name}/{name}{suffix}_{i}") for i in idx]
     else:
         nss = [read_chains(f"chains/{name}_{i}") for i in idx]
         pcs = [PolyChordOutput("chains", f"{name}_{i}") for i in idx]
@@ -54,7 +54,7 @@ def plot_samples_dkl(f, x, ns, prior, ax, color='C0', log=False, max_alpha=1.0,
     dkl = plot_dkl(f, x, ns, prior_samples=prior,
                    weights=ns.get_weights(), ax=ax[1], color=color, **kwargs)
     alpha_plot(x, mean, sigma, ax[0], color, dkl,
-               linecolor=color,
+               linecolor='k',
                max_alpha=max_alpha, **kwargs)
     ax[1].set_ylim(bottom=0)
 
@@ -99,24 +99,26 @@ def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
             lcdm = PolyChordOutput(f"/home/ano23/dp/desi/chains/nonlinear_pk_0/{name}/{name}_polychord_raw", name)
         else:
             lcdm = PolyChordOutput("chains", f"{name}/{name}_lcdm" if zenodo else f"{name}_lcdm")
-        pclogZs -= lcdm.logZ
-        pclogZerrs = np.sqrt(pclogZerrs**2 + lcdm.logZerr**2)
-        ax[0].set_ylabel(r"$\log Z_n-\log Z_{\Lambda\text{CDM}}$",
+        # pclogZs -= lcdm.logZ
+        # pclogZerrs = np.sqrt(pclogZerrs**2 + lcdm.logZerr**2)
+        ax[0].set_ylabel(r"$\log Z_n$",  # -\log Z_{\Lambda\text{CDM}}$",
                          fontsize='x-large')
-        logR = logsumexp(pclogZs) - np.log(n)
-        partials = np.e**(pclogZs - logsumexp(pclogZs))
-        logRerr = (np.sum((partials * pclogZs)**2)
-                   + lcdm.logZerr**2)**(0.5)
-        ax[0].set_title("Bayes factors",
-                        # f"\n$\\log Z_\\mathrm{{flexknot}}"
-                        # f" - \\log Z_{{\\Lambda\\text{{CDM}}}}"
-                        # f" = {logR:.2f} \\pm {logRerr:.2f}$"
-                        # if "_" not in name else "Bayes factors",
-                        fontsize='x-large')
+        # logR = logsumexp(pclogZs) - np.log(n)
+        # partials = np.e**(pclogZs - logsumexp(pclogZs))
+        # logRerr = (np.sum((partials * pclogZs)**2)
+        #            + lcdm.logZerr**2)**(0.5)
+        # ax[0].set_title("Bayes factors",
+        #                 # f"\n$\\log Z_\\mathrm{{flexknot}}"
+        #                 # f" - \\log Z_{{\\Lambda\\text{{CDM}}}}"
+        #                 # f" = {logR:.2f} \\pm {logRerr:.2f}$"
+        #                 # if "_" not in name else "Bayes factors",
+        #                 fontsize='x-large')
 
-        label = f"{label}\n($\\log Z = {logR:.2f} \\pm {logRerr:.2f}$)"
+        # label = f"{label}\n($\\log Z = {logR:.2f} \\pm {logRerr:.2f}$)"
         ax[0].set_xticks(idx[4::5])
         ax[0].set_xticks(idx, minor=True)
+        ax[0].axhline(lcdm.logZ, color=color, linestyle='--')
+        ax[0].text(n-2, lcdm.logZ+0.1, r'$\Lambda$CDM', color=color)
     except FileNotFoundError:
         print("LCDM file not found :(")
     ax[0].errorbar(idx, pclogZs, yerr=pclogZerrs,
@@ -145,11 +147,12 @@ def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
 
 def plot(name, n, single, cobaya, fig=None, ax=None,
          color='C1', label=None, cols=None, dodgy_wcdm=False,
-         tension=False, lower_a=0., zenodo=False, upper_w=0):
+         tension=False, lower_a=0., zenodo=False, upper_w=0,
+         suffix=""):
     params = flexknotparamnames(n, tex=False)
 
     idx, ns, nss, pcs, prior = collect_chains(name, n, single, cobaya,
-                                              dodgy_wcdm, zenodo)
+                                              dodgy_wcdm, zenodo, suffix=suffix)
     ns_comp = ns.compress(1000)
     prior_comp = prior.compress(1000)
 
@@ -161,7 +164,7 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
 
     if cols is None:
         cols = ['Omegam']
-        for col in 'H0rd', 'H0':
+        for col in 'H0rd', 'H0', 'delta_mb':
             if col in ns:
                 cols.append(col)
 
@@ -218,14 +221,15 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
     plot_samples_dkl(
         f, x, ns_comp[params], prior_comp[params],
         ax[0], color=color, max_alpha=0.9,
+
     )
     ax[0][0].axhline(-1, color='k', linestyle='--')
-    ax[0][0].set_xlabel("$a$", fontsize='x-large')
+    ax[0][1].set_xlabel("$a$", fontsize='x-large')
     ax[0][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
                         fontsize='x-large')
     ax[0][0].set_ylabel("$w(a)$", fontsize='x-large')
     ax[0][0].set(xlim=(0, 1), ylim=(-3, upper_w))
-    ax[0][1].set_ylim(top=1.2)
+    # ax[0][1].set_ylim(top=1.4)
 
     corner_plot(ns, cols, ax[2], color=color)
     for _ax in fig.axes:
@@ -257,7 +261,7 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
 
     ax[3][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
                         fontsize='x-large')
-    ax[3][1].set_ylim(top=1.2)
+    # ax[3][1].set_ylim(top=1.4)
     ax[3][0].axhline(-1, color='k', linestyle='--')
 
     ax[0][0].set_title(r"$w(a)$ reconstruction", fontsize='x-large')
@@ -314,23 +318,29 @@ if __name__ == "__main__":
         single = False
         cobaya = False
 
-    # fig, ax = plot(name, n, single, cobaya, color=colors.get(name, colors['desidr1']))
-    # fig, ax = plot("desi", n, single, cobaya, color='k', label=r"DESI DR1")
-    # fig, ax = plot("desi3", n, single, cobaya, fig, ax, color=colors['desidr2'], label=r"DESI DR2", dodgy_wcdm=True)
+    # fig, ax = plot(name, n, single, cobaya, color=colors.get(name, colors['des5y']), zenodo=True, upper_w=1.0, suffix="_wide")
+    # fig, ax = plot("desidr1", n, single, cobaya, color='k', label=r"DESI DR1", zenodo=True)
+    # fig, ax = plot("desidr2", n, single, cobaya, fig, ax, color=colors['desidr2'], label=r"DESI DR2", zenodo=True)
     # fig, ax = plot("desi3", n, single, cobaya, color=colors['desidr2'], label=r"DESI DR2 $w\in [-3, -0.01]$", dodgy_wcdm=True)
     # fig, ax = plot("desidr2_wide", n, single, cobaya, fig, ax, color=colors['desi3ia_h0'], label=r"DESI DR2 $w\in [-3, 1]$", upper_w=1)
     # fig.suptitle("DESI DR2 prior comparison", fontsize="xx-large")
-    fig, ax = plot("desidr1_pantheonplus", n, single, cobaya, color=colors['desidr1_pantheonplus'], label="DESI DR1 + Pantheon+")
-    fig, ax = plot("desidr2_pantheonplus", n, single, cobaya, fig, ax, color=colors['desidr2_pantheonplus'], label="DESI DR2 + Pantheon+")
-    # fig, ax = plot("desidr1_des5y", n, single, cobaya, color=colors['desidr1_des5y'], label="DESI DR1 + DES5Y")
-    # fig, ax = plot("desidr2_des5y", n, single, cobaya, fig, ax, color=colors['desidr2_des5y'], label="DESI DR2 + DES5Y")
+    # fig, ax = plot("desidr1_pantheonplus", n, single, cobaya, color=colors['desidr1_pantheonplus'], label="DESI DR1 + Pantheon+", zenodo=True)
+    # fig, ax = plot("desidr2_pantheonplus", n, single, cobaya, color=colors['desidr2_pantheonplus'], label="DESI DR2 + Pantheon+", zenodo=True, tension=True)
+    # fig, ax = plot("desidr1_des5y", n, single, cobaya, color=colors['desidr1_des5y'], label="DESI DR1 + DES5Y", zenodo=True)
+    # fig, ax = plot("desidr2_des5y", n, single, cobaya, fig, ax, color=colors['desidr2_des5y'], label="DESI DR2 + DES5Y", zenodo=True, tension=True)
     # cols = ["Omegam", "H0rd", "H0"]
     # #1f77b4
     # fig, ax = plot("desi", n, single, False, color='#58acbc', label="DESI", cols=cols)
     # fig, ax = plot("ia", n, single, False, fig, ax, color='#d05a5c', label="Pantheon+", cols=cols)
     # fig, ax = plot("desiia", n, single, False, fig, ax, color='C0', label="DESI & Pantheon+", cols=cols)
-    fig.tight_layout()
+    # fig.suptitle("DESI DR1 vs DESI DR2", fontsize="xx-large")
+    # fig.suptitle("DESI DR1 + Pantheon+ vs DESI DR2 + Pantheon+", fontsize="xx-large")
+    # fig.suptitle("DESI DR1 + DES5Y vs DESI DR2 + DES5Y", fontsize="xx-large")
     # fig.suptitle("DESI DR2 + Pantheon+ prior comparison", fontsize="xx-large")
+    cols = ["Omegam", "delta_mb"]
+    fig, ax = plot("des5y", n, single, cobaya, cols=cols, color=colors['des5y'], zenodo=True, upper_w=1.0, suffix="_wide")
+    fig, ax = plot("des5yoffset", n, single, cobaya, fig, ax, cols=cols, color=colors['desidr2_des5y'], zenodo=True, upper_w=1.0, suffix="_wide")
+    fig.tight_layout()
     # ax[2].iloc[1, 2].remove()
     # ax[2].iloc[2, 1].remove()
 
@@ -339,7 +349,7 @@ if __name__ == "__main__":
     plotpath.mkdir(parents=True, exist_ok=True)
     # fig.savefig(plotpath / f"desi_vs_pantheon_{n}{'_i' if single else ''}.png",
     # fig.savefig(plotpath / f"{name}_{n}_cobaya_comparison_wa.pdf",
-    fig.savefig(plotpath / f"{name}_DR1_comparison_{n}{'_i' if single else ''}_wa.pdf",
-    # fig.savefig(plotpath / f"{name}_{n}{'_i' if single else ''}_wa.pdf",
+    # fig.savefig(plotpath / f"{name}_DR1_comparison_{n}{'_i' if single else ''}_wa.pdf",
+    fig.savefig(plotpath / f"{name}_{n}{'_i' if single else ''}_wa.pdf",
                 bbox_inches='tight')
     plt.show()

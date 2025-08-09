@@ -6,9 +6,9 @@ from pypolychord.priors import UniformPrior
 from common import run
 import distances
 
-data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
+data = read_csv("/Users/adam/phd/clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_mean.txt",
                 header=None, index_col=None, sep=r"\s+", comment="#")
-cov = np.loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
+cov = np.loadtxt("/Users/adam/phd/clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
 
 # turn off first problematic point
 # idx = data.iloc[:, 0] != 0.510
