@@ -8,7 +8,7 @@ from ia import IaLogL
 
 
 # data loading stolen from Toby
-path = Path('/Users/adam/phd/clik_installs/desi/data/sn_data/DESY5')
+path = Path('../clik_installs/desi/data/sn_data/DESY5')
 df = pd.read_table(path/'DES-SN5YR_HD.csv', sep=',', engine='python')
 # DES 5Y data is not sorted by redshift
 idx = np.argsort(df['zHD'])
