@@ -27,7 +27,8 @@ if __name__ == "__main__":
         likelihood,
         sys.argv[1],
         [UniformPrior(0.01, 0.99)],
-        "ia",
+        "pantheonplus_wide",
         [("Omegam", r"\Omega_\mathrm{m}")],
-        False,
+        read_resume=True,
+        wide_prior=True,
     )

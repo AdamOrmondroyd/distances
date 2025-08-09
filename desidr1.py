@@ -10,6 +10,16 @@ data = read_csv("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_
                 header=None, index_col=None, sep=r"\s+", comment="#")
 cov = np.loadtxt("../clik_installs/desi/data/bao_data/desi_2024_gaussian_bao_ALL_GCcomb_cov.txt")
 
+# turn off first problematic point
+# idx = data.iloc[:, 0] != 0.510
+# turn off second problematic point
+# idx = data.iloc[:, 0] != 0.706
+# turn off both LRG points
+# idx = (data.iloc[:, 0] != 0.510) & (data.iloc[:, 0] != 0.706)
+# data = data.loc[idx]
+# cov = cov[idx][:, idx]
+print(data)
+
 zs = data.iloc[:, 0].to_numpy()
 mean = data.iloc[:, 1].to_numpy()
 di_over_rss = [getattr(distances, i.lower()) for i in data.iloc[:, 2]]
@@ -38,7 +48,7 @@ if __name__ == "__main__":
         likelihood,
         sys.argv[1],
         [UniformPrior(3650, 18250), UniformPrior(0.01, 0.99)],
-        "desi",
+        "desidr1",
         [(r"H0rd", r"H_0r_\mathrm{d}"), (r"Omegam", r"\Omega_\mathrm{m}")],
         True,
     )

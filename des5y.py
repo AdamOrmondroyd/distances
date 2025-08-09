@@ -25,6 +25,10 @@ logl_des5y = IaLogL(df, cov, mb_column='MU', z_cutoff=0.0)
 
 omegar = 8.24e-5
 
+# print(f"highest redshift is {np.max(df['zHD']):.2f}.",
+      # f"Cutting off at a={1/(1+np.max(df['zHD'])):.3f}",
+      # flush=True)
+
 if __name__ == "__main__":
 
     def likelihood(theta):
@@ -35,7 +39,10 @@ if __name__ == "__main__":
         likelihood,
         sys.argv[1],
         [UniformPrior(0.01, 0.99)],
+        # "des5y_a_cutoff",
         "des5y",
         [("Omegam", r"\Omega_\mathrm{m}")],
-        True,
+        read_resume=True,
+        wide_prior=sys.argv[1] != "cpl",
+        # low_a=1/(1+np.max(df['zHD'])),
     )

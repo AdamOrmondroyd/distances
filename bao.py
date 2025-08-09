@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.stats import multivariate_normal
-from desi import data, cov
+from desidr1 import data, cov
 
 
 zs = data.iloc[:, 0].to_numpy()
