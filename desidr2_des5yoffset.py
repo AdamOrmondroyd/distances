@@ -22,7 +22,7 @@ if __name__ == "__main__":
             UniformPrior(3650, 18250),
             UniformPrior(0.01, 0.99)
         ],
-        "desidr2_des5y",
+        "desidr2_des5yoffset",
         [
             ("delta_mb", r"\Delta m_\mathrm{B}"),
             (r"H0rd", r"H_0r_\mathrm{d}"),
