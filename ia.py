@@ -1,6 +1,7 @@
-from numpy import array, log, log10, ones, pi
-from numpy.linalg import inv, slogdet
-from distances import c, h0_dl_over_c
+from numpy import array, diag, log, log10, ones, pi
+from numpy.linalg import inv, slogdet, solve
+from scipy.linalg import ldl
+from distances import h0_dl_over_c
 
 
 class IaLogL:
@@ -17,21 +18,38 @@ class IaLogL:
 
         self.cov = cov[mask, :][:, mask]
 
-        one = ones(len(self.cov))[:, None]
-        invcov = inv(self.cov)
-        self.invcov_tilde = (
-            invcov - invcov @ one @ one.T @ invcov / (one.T @ invcov @ one)
-        )
-        self.lognormalisation = 0.5 * (
-            log(2*pi) - slogdet(2 * pi * self.cov)[1]
-            - log((one.T @ invcov @ one).squeeze())
-        ) + log(c / (1e-5 * (h0max - h0min)))
+        (self.lT, self.d, self.perm), self.lognorm = self._compute_cholesky_and_lognorm(cov)
 
-        self.a = 1e-5 * h0min / c
-        self.b = 1e-5 * h0max / c
-        self.onesigma_times_5_over_log10 = (
-            one.T @ self.invcov_tilde * 5 / log(10)
+    def _compute_cholesky_and_lognorm(self, cov):
+        one = ones((len(cov), 1))
+
+        invcov = inv(cov)
+        invcov_one = solve(cov, one)  # More stable than inv @ one
+        one_T_invcov_one = invcov_one.sum(keepdims=True)
+
+        # Constrained inverse using Cobaya's more stable approach
+        # C^-1_tilde = C^-1 - (C^-1 @ 1) @ solve(1^T @ C^-1 @ 1, (C^-1 @ 1)^T)
+        invcov_tilde = (
+            invcov
+            - invcov_one @ solve(one_T_invcov_one, invcov_one.T)
         )
+
+        # Compute Cholesky decomposition for GPU vmap bug fix
+        # This avoids the problematic y.T @ M @ y operation
+        l, d, perm = ldl(invcov_tilde)
+        lT = array(l).T
+        d = array(diag(d))
+
+        # Compute log normalization in fp64
+        sign, logdet = slogdet(cov)
+        if sign != 1:
+            raise ValueError("Covariance matrix must be positive definite.")
+        lognorm = -0.5 * (
+            logdet                           # log|C|
+            + log(2*pi) * (len(cov) - 1)  # log(2π)^(n-1) after marginalization
+            + log(one_T_invcov_one.item())       # log(1^T C^-1 1)
+        )
+        return (lT, d, perm), lognorm
 
     def _y(self, omegam, omegar, theta=array([-1])):
         theta = array(theta)
@@ -40,11 +58,5 @@ class IaLogL:
 
     def __call__(self, *args, **kwargs):
         y = self._y(*args, **kwargs)
-        capital_y = float((self.onesigma_times_5_over_log10 @ y).squeeze())
-        return (
-            - float(y.T @ self.invcov_tilde @ y / 2)
-            + log(
-                    (self.b**(capital_y + 1) - self.a**(capital_y + 1))
-                    / (capital_y + 1)
-                )
-            + self.lognormalisation)
+        v = self.lT @ y[self.perm]
+        return -(v * self.d * v).sum() / 2.0 + self.lognorm
