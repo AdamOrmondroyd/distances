@@ -103,9 +103,13 @@ def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
         # pclogZerrs = np.sqrt(pclogZerrs**2 + lcdm.logZerr**2)
         ax[0].set_ylabel(r"$\log Z_n$",  # -\log Z_{\Lambda\text{CDM}}$",
                          fontsize='x-large')
+        logZtot = logsumexp(pclogZs) - np.log(n)
+        partials = np.e**(pclogZs - logsumexp(pclogZs))
+        logZtoterr = (np.sum((partials * pclogZerrs)**2))**(0.5)
+        print(f"logZ = {logZtot} \\pm {logZtoterr}")
         # logR = logsumexp(pclogZs) - np.log(n)
         # partials = np.e**(pclogZs - logsumexp(pclogZs))
-        # logRerr = (np.sum((partials * pclogZs)**2)
+        # logRerr = (np.sum((partials * pclogZerrs)**2)
         #            + lcdm.logZerr**2)**(0.5)
         # ax[0].set_title("Bayes factors",
         #                 # f"\n$\\log Z_\\mathrm{{flexknot}}"
@@ -118,7 +122,7 @@ def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
         ax[0].set_xticks(idx[4::5])
         ax[0].set_xticks(idx, minor=True)
         ax[0].axhline(lcdm.logZ, color=color, linestyle='--')
-        ax[0].text(n-2, lcdm.logZ+0.1, r'$\Lambda$CDM', color=color)
+        ax[0].text(0.5, lcdm.logZ-0.2, r'$\Lambda$CDM', color=color)
     except FileNotFoundError:
         print("LCDM file not found :(")
     ax[0].errorbar(idx, pclogZs, yerr=pclogZerrs,
@@ -148,11 +152,12 @@ def bayes_and_tension(name, n, idx, pcs, fig, ax, label=None, color='C0',
 def plot(name, n, single, cobaya, fig=None, ax=None,
          color='C1', label=None, cols=None, dodgy_wcdm=False,
          tension=False, lower_a=0., zenodo=False, upper_w=0,
-         suffix=""):
+         suffix="", j=0):
     params = flexknotparamnames(n, tex=False)
 
     idx, ns, nss, pcs, prior = collect_chains(name, n, single, cobaya,
                                               dodgy_wcdm, zenodo, suffix=suffix)
+    if "delta_mb" in ns: print(f"delta_mb {ns.delta_mb.mean()} \\pm {ns.delta_mb.std()}")
     ns_comp = ns.compress(1000)
     prior_comp = prior.compress(1000)
 
@@ -161,6 +166,7 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
         ns.set_label("H0rd", r"$H_0r_\mathrm{d}$")
     if "omegam" in ns:
         ns = ns.rename(columns={"omegam": "Omegam"})
+        ns.set_label("Omegam", r"$\Omegam_\mathrm{m}$")
 
     if cols is None:
         cols = ['Omegam']
@@ -168,48 +174,60 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
             if col in ns:
                 cols.append(col)
 
+    figwasnotnone = False
     if fig is None:
-        fig = plt.figure(figsize=(12, 12))
-        gs = gridspec.GridSpec(2, 2)
+        figwasnotnone = True
+        fig = plt.figure(figsize=(12, 16))
+        gs = gridspec.GridSpec(2, 2, height_ratios=[10, 6])
+        anesthetic_axes = make_2d_axes(cols, fig=fig, subplot_spec=gs[1, 0])[1]
+    else:
+        anesthetic_axes = ax[2]
+
+    corner_plot(ns, cols, anesthetic_axes, color=color)
+    if figwasnotnone:
 
         # add 2x1 gridspec to top left
-        top_left = gridspec.GridSpecFromSubplotSpec(2, 1,
+        top_left = gridspec.GridSpecFromSubplotSpec(3, 1,
                                                     subplot_spec=gs[0, 0],
                                                     hspace=0.1,
-                                                    height_ratios=[1, 0.5])
+                                                    height_ratios=[1, 1, 0.5])
         if tension:
             top_right = gridspec.GridSpecFromSubplotSpec(2, 1,
-                                                         subplot_spec=gs[0, 1],
+                                                         subplot_spec=gs[1, 1],
                                                          hspace=0.1,
                                                          height_ratios=[3, 2])
             ax_logR = fig.add_subplot(top_right[1])
-        bottom_right = gridspec.GridSpecFromSubplotSpec(2, 1,
-                                                        subplot_spec=gs[1, 1],
+        bottom_right = gridspec.GridSpecFromSubplotSpec(3, 1,
+                                                        subplot_spec=gs[0, 1],
                                                         hspace=0.1,
-                                                        height_ratios=[1, 0.5])
-        ax_dkl = fig.add_subplot(top_left[1])
-        ax_zkl = fig.add_subplot(bottom_right[1])
+                                                        height_ratios=[1, 1, 0.5])
+        ax_dkl = fig.add_subplot(top_left[2])
+        ax_zkl = fig.add_subplot(bottom_right[2])
         ax = [
             [
                 fig.add_subplot(top_left[0], sharex=ax_dkl),
+                fig.add_subplot(top_left[1], sharex=ax_dkl),
                 ax_dkl,
             ],
             [
                 fig.add_subplot(top_right[0], sharex=ax_logR),
                 ax_logR,
-            ] if tension else [fig.add_subplot(gs[0, 1])],
-            make_2d_axes(cols, fig=fig, subplot_spec=gs[1, 0])[1]
-            if len(cols) > 1 else
-            fig.add_subplot(gs[1, 0]),
+            ] if tension else [fig.add_subplot(gs[1, 1])],
+            anesthetic_axes,
+            # if len(cols) > 1 else
+            # fig.add_subplot(gs[1, 0]),
             [
                 fig.add_subplot(bottom_right[0], sharex=ax_zkl),
+                fig.add_subplot(bottom_right[1], sharex=ax_zkl),
                 ax_zkl,
             ],
         ]
         plt.setp(ax[0][0].get_xticklabels(), visible=False)
+        plt.setp(ax[0][1].get_xticklabels(), visible=False)
         if tension:
             plt.setp(ax[1][0].get_xticklabels(), visible=False)
         plt.setp(ax[3][0].get_xticklabels(), visible=False)
+        plt.setp(ax[3][1].get_xticklabels(), visible=False)
 
     fk = FlexKnot(lower_a, 1)
 
@@ -220,18 +238,18 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
     x = np.linspace(lower_a, 1, 100)
     plot_samples_dkl(
         f, x, ns_comp[params], prior_comp[params],
-        ax[0], color=color, max_alpha=0.9,
+        [ax[0][j], ax[0][-1]],
+        color=color, max_alpha=0.9,
 
     )
-    ax[0][0].axhline(-1, color='k', linestyle='--')
-    ax[0][1].set_xlabel("$a$", fontsize='x-large')
-    ax[0][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
+    ax[0][j].axhline(-1, color='k', linestyle='--')
+    ax[0][-1].set_xlabel("$a$", fontsize='x-large')
+    ax[0][-1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
                         fontsize='x-large')
-    ax[0][0].set_ylabel("$w(a)$", fontsize='x-large')
-    ax[0][0].set(xlim=(0, 1), ylim=(-3, upper_w))
+    ax[0][j].set_ylabel("$w(a)$", fontsize='x-large')
+    ax[0][j].set(xlim=(0, 1), ylim=(-3, upper_w))
     # ax[0][1].set_ylim(top=1.4)
 
-    corner_plot(ns, cols, ax[2], color=color)
     for _ax in fig.axes:
         _ax.tick_params(labelsize='large')
 
@@ -252,17 +270,17 @@ def plot(name, n, single, cobaya, fig=None, ax=None,
         return fk(1/(1+z), theta)
 
     z = np.logspace(-3, np.log10(2.5), 100)
-    plot_samples_dkl(fz, z, ns_comp[params], prior_comp[params], ax[3],
+    plot_samples_dkl(fz, z, ns_comp[params], prior_comp[params], [ax[3][j], ax[3][-1]],
                      max_alpha=0.9,
                      color=color, log=True)
-    ax[3][1].set_xlabel("$z$", fontsize='x-large')
-    ax[3][0].set_ylabel("$w(z)$", fontsize='x-large')
-    ax[3][0].set(xlim=(min(z), max(z)), ylim=(-3, upper_w), xscale='log')
+    ax[3][-1].set_xlabel("$z$", fontsize='x-large')
+    ax[3][j].set_ylabel("$w(z)$", fontsize='x-large')
+    ax[3][j].set(xlim=(min(z), max(z)), ylim=(-3, upper_w), xscale='log')
 
-    ax[3][1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
+    ax[3][-1].set_ylabel(r"$D_\mathrm{KL}(\mathcal{P}||\pi)$",
                         fontsize='x-large')
     # ax[3][1].set_ylim(top=1.4)
-    ax[3][0].axhline(-1, color='k', linestyle='--')
+    ax[3][j].axhline(-1, color='k', linestyle='--')
 
     ax[0][0].set_title(r"$w(a)$ reconstruction", fontsize='x-large')
     ax[3][0].set_title(r"$w(z)$ reconstruction", fontsize='x-large')
@@ -288,7 +306,7 @@ colors = dict(
     desiia_h0='#1f77b4',  # for desi+ia
     desides5y='#7B0043',
     des5y='C1',
-    # arsenal_red='#EF0107',
+    arsenal_red='#EF0107',
     desi3ia_h0='#ff964f',
     desi3des5y='#caa0ff',
 )
@@ -337,9 +355,20 @@ if __name__ == "__main__":
     # fig.suptitle("DESI DR1 + Pantheon+ vs DESI DR2 + Pantheon+", fontsize="xx-large")
     # fig.suptitle("DESI DR1 + DES5Y vs DESI DR2 + DES5Y", fontsize="xx-large")
     # fig.suptitle("DESI DR2 + Pantheon+ prior comparison", fontsize="xx-large")
+    # cols = ["Omegam", "delta_mb"]
+    # fig, ax = plot("des5y", n, single, cobaya, cols=cols, color=colors['des5y'], zenodo=True, upper_w=1.0, suffix="_wide", label="DES-5Y", j=0)
+    # fig, ax = plot("des5yoffset", n, single, cobaya, fig, ax, cols=cols, color=colors['desi_sdss'], zenodo=True, upper_w=1.0, suffix="_wide", label="DES-5Y with offset", j=1)
+    # fig.suptitle("DES-5Y vs DES-5Y with offset $\\Delta m_\\mathrm{B}$", fontsize="xx-large")
+
     cols = ["Omegam", "delta_mb"]
-    fig, ax = plot("des5y", n, single, cobaya, cols=cols, color=colors['des5y'], zenodo=True, upper_w=1.0, suffix="_wide")
-    fig, ax = plot("des5yoffset", n, single, cobaya, fig, ax, cols=cols, color=colors['desidr2_des5y'], zenodo=True, upper_w=1.0, suffix="_wide")
+    fig, ax = plot("desidr2_des5y", n, single, cobaya, cols=cols, color=colors['des5y'], zenodo=True, upper_w=1.0, suffix="_wide", label="DESI + DES-5Y")
+    fig, ax = plot("desidr2_des5y_no_clustering", n, single, cobaya, fig, ax, cols=cols, color=colors['desidr2'], zenodo=True, upper_w=1.0, suffix="_wide", label="DESI + DES-5Y no clustering", j=1)
+    fig.suptitle("DES-5Y vs DES-5Y with offset $\\Delta m_\\mathrm{B}$, + DESI BAO", fontsize="xx-large")
+
+    ax[2].loc["delta_mb", "delta_mb"].axvline(-0.04, linestyle="--", color='k')
+    ax[2].loc["delta_mb", "delta_mb"].set_xlim(-0.1, 0.1)
+    ax[2].loc["delta_mb", "Omegam"].tick_params('x', bottom=True, labelbottom=True)
+    ax[2].loc["delta_mb", "Omegam"].set_xlabel(r"$\Omega_\mathrm{m}$", visible=True)
     fig.tight_layout()
     # ax[2].iloc[1, 2].remove()
     # ax[2].iloc[2, 1].remove()

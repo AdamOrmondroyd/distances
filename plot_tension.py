@@ -61,7 +61,7 @@ def tensionplot(likelihoods, n, ax, color, label):
     ax.set_xticks(idx, minor=True)
     logRlcdm = logR[0]
     ax.axhline(logRlcdm.mean(), color=color, linestyle='--')
-    ax.text(n-2, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
+    ax.text(n-4, logRlcdm.mean()+0.1, r'$\Lambda$CDM', color=color)
 
 
 
@@ -75,22 +75,20 @@ if __name__ == "__main__":
         char = sys.argv[1][0]
         n = int(sys.argv[1][1:])
     likelihoods = sys.argv[2:]
-    fig, ax = plt.subplots(1, 2, figsize=(9, 4.5), sharey=True)
+    fig, ax = plt.subplots(1, 1, figsize=(4.5, 4.5))
     desi_color = '#58acbc'
     garter_blue = '#1f77b4'  # for desi+ia
     des5y_color = 'C1'
     newiacolor = '#ff964f'
     purple = '#7B0043'
     newdescolor = '#caa0ff'
-    tensionplot(["desidr1", "pantheonplus"], n, ax[0], garter_blue, 'DESI DR1 vs Pantheon+')
-    tensionplot(["desidr2", "pantheonplus"], n, ax[0], newiacolor, "DESI DR2 vs Pantheon+")
-    tensionplot(["desidr1", "des5y"], n, ax[1], purple, 'DESI DR1 vs DES5Y')
-    tensionplot(["desidr2", "des5y"], n, ax[1], newdescolor, 'DESI DR2 vs DES5Y')
-    ax[0].set(title="DESI vs Pantheon+")
-    ax[1].set(title="DESI vs DES5Y")
-    for _ax in ax:
-        _ax.legend(frameon=True, framealpha=0.5)
-    ax[1].tick_params(labelleft=True)
+    # tensionplot(["desidr1", "pantheonplus"], n, ax[0], garter_blue, 'DESI DR1 vs Pantheon+')
+    # tensionplot(["desidr2", "pantheonplus"], n, ax[0], newiacolor, "DESI DR2 vs Pantheon+")
+    tensionplot(["desidr2", "des5y"], n, ax, 'C1', 'DESI vs DES5Y')
+    tensionplot(["desidr2", "des5yoffset"], n, ax, '#caa0ff', r'DESI vs DES5Y ($\Delta m_\mathrm{B}$)')
+    # ax[0].set(title="DESI vs Pantheon+")
+    ax.set(title="DESI vs DES5Y tension")
+    ax.legend(frameon=True, framealpha=0.5)
     fig.tight_layout()
 
     (Path("plots") / '_'.join(likelihoods)).mkdir(parents=True, exist_ok=True)
